@@ -3,28 +3,21 @@ package nez.checker.js;
 import java.util.ArrayList;
 
 import nez.checker.ModifiableTree;
-import nez.checker.SourceGenerator;
 
-public class FSharpGenerator extends SourceGenerator {
-
-	private static boolean UseExtend;
+public class FSharpModifier {
 	
-	private FSharpModifier modifier;
-	/**
-	 * List of scopes in JavaScript. Finally, we output information which this
-	 * list has.
-	 **/
 	private ArrayList<FSharpScope> fsClasses;
 	private int lambdaIdentifier = 0;
-
-	public FSharpGenerator() {
-		FSharpGenerator.UseExtend = false;
+	
+	public FSharpModifier(){
 		fsClasses = new ArrayList<FSharpScope>();
-		modifier = new FSharpModifier();
 	}
+	
+	private FSharpScope addFunctionToList(ModifiableTree node,
+			FSharpScope parentScope) {
 
-	private FSharpScope addFunctionToList(ModifiableTree node,FSharpScope parentScope) {
-		FSharpScope newScope = null; // newScope is the node which will be added to List
+		FSharpScope newScope = null; // newScope is the node which will be added
+										// to List
 
 		// case: Define by the code, such as ( function $NAME (...){...}; )
 		if (node.get(2).is(JSTag.TAG_NAME) && !node.getParent().is(JSTag.TAG_ASSIGN)) {
@@ -37,7 +30,8 @@ public class FSharpGenerator extends SourceGenerator {
 			if (parent.is(JSTag.TAG_VAR_DECL) || parent.is(JSTag.TAG_PROPERTY) || parent.is(JSTag.TAG_ASSIGN)) {
 				// case: function is lambda
 				if (!node.get(2).is(JSTag.TAG_NAME)) {
-					newScope = new FSharpScope(parent.get(0).getText(), node, parentScope);
+					newScope = new FSharpScope(parent.get(0).getText(), node,
+							parentScope);
 				}
 				// case: function is not lambda. function is named local name.
 				else {
@@ -225,15 +219,7 @@ public class FSharpGenerator extends SourceGenerator {
 		return true;
 	}
 
-	private void generateFSCode(FSharpScope currentScope) {
-		// TODO
-	}
-
-	private void generatePrintCode() {
-		// TODO
-	}
-
-	public void toSource(ModifiableTree node) {
+	public void modifi(ModifiableTree node) {
 		FSharpScope topScope = new FSharpScope("TOPLEVEL", node, null);
 		fsClasses.add(topScope);
 		findScope(node, topScope);
@@ -246,10 +232,6 @@ public class FSharpGenerator extends SourceGenerator {
 		for (FSharpScope fsClass : fsClasses) {
 			formatTree(fsClass);
 		}
-		for (FSharpScope fsClass : fsClasses) {
-			generateFSCode(fsClass);
-		}
-		generatePrintCode();
 	}
 
 }
