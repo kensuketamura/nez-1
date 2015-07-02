@@ -1,20 +1,12 @@
 package nez.lang;
 
-import nez.ast.Source;
 import nez.ast.SourcePosition;
-import nez.util.UFlag;
-import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
-public class AnyChar extends Terminal implements Consumed {
-	boolean binary = false;
-	public final boolean isBinary() {
-		return this.binary;
-	}
+public class AnyChar extends Char implements Consumed {
 	AnyChar(SourcePosition s, boolean binary) {
-		super(s);
-		this.binary = binary;
+		super(s, binary);
 	}
 	@Override
 	public final boolean equalsExpression(Expression o) {
@@ -55,13 +47,8 @@ public class AnyChar extends Terminal implements Consumed {
 	}
 	
 	@Override
-	public short acceptByte(int ch, int option) {
-		if(binary) {
-			return (ch == Source.BinaryEOF) ? Acceptance.Reject : Acceptance.Accept;
-		}
-		else {
-			return (ch == Source.BinaryEOF || ch == 0) ? Acceptance.Reject : Acceptance.Accept;
-		}
+	public short acceptByte(int ch) {
+		return PossibleAcceptance.acceptAny(binary, ch);
 	}
 	
 	@Override

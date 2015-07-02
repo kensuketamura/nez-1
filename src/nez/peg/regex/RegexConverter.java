@@ -9,7 +9,7 @@ import nez.ast.CommonTree;
 import nez.ast.Tag;
 import nez.lang.Expression;
 import nez.lang.GrammarFactory;
-import nez.lang.NameSpace;
+import nez.lang.GrammarFile;
 import nez.lang.Production;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
@@ -18,7 +18,7 @@ import nez.util.UList;
 public class RegexConverter extends GrammarConverter{
 	HashMap<Integer, Method> methodMap = new HashMap<Integer, Method>();
 	int NonTerminalCount = 0;
-	public RegexConverter(NameSpace grammar, String name) {
+	public RegexConverter(GrammarFile grammar, String name) {
 		super(grammar, name);
 	}
 	
@@ -71,7 +71,7 @@ public class RegexConverter extends GrammarConverter{
 		file.writeIndent("// Generate Date: " + new Date().toString());
 		file.writeIndent("// Input regex :  " + e.getText());
 		file.writeIndent("\n");
-		for(Production r : grammar.getRuleList()) {
+		for(Production r : grammar.getAllProductionList()) {
 			file.write(r.toString());
 			file.writeIndent("\n");
 		}
@@ -234,7 +234,7 @@ public class RegexConverter extends GrammarConverter{
 		else {
 			GrammarFactory.addChoice(l, toEmpty(node));
 		}
-		return GrammarFactory.newDirectChoice(null, l);
+		return GrammarFactory.newChoice(null, l);
 	}
 
 	public Expression toSeq(CommonTree e, Expression k) {

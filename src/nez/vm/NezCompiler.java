@@ -1,22 +1,22 @@
 package nez.vm;
 
+import nez.NezOption;
 import nez.lang.Grammar;
-import nez.util.UFlag;
 import nez.util.UList;
 
 public abstract class NezCompiler extends NezEncoder {
 
-	public NezCompiler(int option) {
+	public NezCompiler(NezOption option) {
 		super(option);
 	}
 
-	protected final boolean enablePackratParsing() {
-		return UFlag.is(this.option, Grammar.PackratParsing);
-	}
-
-	protected final boolean enableASTConstruction() {
-		return UFlag.is(this.option, Grammar.ASTConstruction);
-	}
+//	protected final boolean enablePackratParsing() {
+//		return option.enabledMemoization;
+//	}
+//
+//	protected final boolean enableASTConstruction() {
+//		return option.enabledASTConstruction;
+//	}
 	
 	public abstract NezCode compile(Grammar grammar);
 
@@ -33,8 +33,8 @@ public abstract class NezCompiler extends NezEncoder {
 				Instruction.labeling(inst.next);
 			}
 			layoutCode(codeList, inst.branch());
-			if(inst instanceof IDfaDispatch) {
-				IDfaDispatch match = (IDfaDispatch)inst;
+			if(inst instanceof IPredictDispatch) {
+				IPredictDispatch match = (IPredictDispatch)inst;
 				for(int ch = 0; ch < match.jumpTable.length; ch ++) {
 					layoutCode(codeList, match.jumpTable[ch]);
 				}

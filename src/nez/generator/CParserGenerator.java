@@ -5,21 +5,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
-import nez.ast.Tag;
+import nez.NezOption;
 import nez.lang.And;
 import nez.lang.AnyChar;
 import nez.lang.Block;
 import nez.lang.ByteChar;
 import nez.lang.ByteMap;
 import nez.lang.Capture;
+import nez.lang.CharMultiByte;
 import nez.lang.Choice;
 import nez.lang.DefIndent;
 import nez.lang.DefSymbol;
-import nez.lang.Empty;
 import nez.lang.ExistsSymbol;
 import nez.lang.Expression;
-import nez.lang.Failure;
 import nez.lang.Grammar;
+import nez.lang.GrammarOptimizer;
 import nez.lang.IfFlag;
 import nez.lang.IsIndent;
 import nez.lang.IsSymbol;
@@ -36,8 +36,6 @@ import nez.lang.Repetition1;
 import nez.lang.Replace;
 import nez.lang.Sequence;
 import nez.lang.Tagging;
-import nez.util.UFlag;
-import nez.vm.GrammarOptimizer;
 
 public class CParserGenerator extends ParserGenerator {
 
@@ -46,18 +44,14 @@ public class CParserGenerator extends ParserGenerator {
 		return "a Nez parser generator for C (sample)";
 	}
 
-	boolean isPackrat = false;
-	boolean PatternMatch = true;
-	int option = common;
-	static int plain = Grammar.ASTConstruction;
-	static int prediction = Grammar.ASTConstruction | Grammar.Prediction;
-	static int common = Grammar.ASTConstruction | Grammar.Prediction | Grammar.CommonPrefix;
-	GrammarOptimizer optimizer = new GrammarOptimizer(this.option);
+	GrammarOptimizer optimizer = null;
 	int predictionCount = 0;
 
 	@Override
-	public void generate(Grammar grammar, int option, String fileName) {
+	public void generate(Grammar grammar, NezOption option, String fileName) {
 		this.setOption(option);
+		this.option.setOption("ast", false);
+		this.optimizer = new GrammarOptimizer(option);
 		this.setOutputFile(fileName);
 		makeHeader(grammar);
 		for(Production p : grammar.getProductionList()) {
@@ -66,7 +60,7 @@ public class CParserGenerator extends ParserGenerator {
 		makeFooter(grammar);
 		file.writeNewLine();
 		file.flush();
-		System.out.println("PredictionCount: " + this.predictionCount);
+//		System.out.println("PredictionCount: " + this.predictionCount);
 		//FIXME
 		//System.out.println("CommonCount: " + optimizer.commonCount);
 	}
@@ -83,19 +77,6 @@ public class CParserGenerator extends ParserGenerator {
 			}
 		}
 		this.file.writeNewLine();
-	}
-
-	String getOption() {
-		if(option == plain) {
-			return "plain";
-		}
-		else if(option == prediction) {
-			return "prediction";
-		}
-		else if(option == common) {
-			return "common";
-		}
-		return "unknown option";
 	}
 
 	@Override
@@ -122,7 +103,7 @@ public class CParserGenerator extends ParserGenerator {
 		this.file.writeIndent("else");
 		this.openBlock();
 		this.file.writeIndent("end = timer();");
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.file.writeIndent("ParsingObject po = nez_commitLog(ctx,0);");
 			this.file.writeIndent("dump_pego(&po, ctx->inputs, 0);");
 		}
@@ -137,8 +118,8 @@ public class CParserGenerator extends ParserGenerator {
 		this.closeBlock();
 		this.closeBlock();
 		this.closeBlock();
-		this.file.writeIndent("nez_log(ctx, argv[1], \"" + grammar.getProductionList().get(0).getNameSpace().getURN() + "\", "
-				+ grammar.getProductionList().size() + ", latency, \"" + this.getOption() + "\");");
+		this.file.writeIndent("nez_log(ctx, argv[1], \"" + grammar.getProductionList().get(0).getGrammarFile().getURN() + "\", "
+				+ grammar.getProductionList().size() + ", latency, \"\");");
 		this.file.writeIndent("return 0;");
 		this.file.writeIndent();
 		this.closeBlock();
@@ -236,7 +217,7 @@ public class CParserGenerator extends ParserGenerator {
 		this.closeBlock();
 		this.file.writeIndent("else");
 		this.openBlock();
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.file.writeIndent("nez_pushDataLog(ctx, LazyLink_T, 0, -1, NULL, memo->left);");
 		}
 		this.file.writeIndent("ctx->cur = memo->consumed;");
@@ -656,7 +637,7 @@ public class CParserGenerator extends ParserGenerator {
 		this.file.writeIndent("int p" + rule.getLocalName() + "(ParsingContext ctx)");
 		this.openBlock();
 		this.pushFailureJumpPoint();
-		if(isPackrat) {
+		if(this.option.enabledPackratParsing) {
 			lookup(rule, memoId);
 			String pos = "c" + this.fid;
 			this.let("char*", pos, "ctx->cur");
@@ -808,6 +789,13 @@ public class CParserGenerator extends ParserGenerator {
 	}
 
 	@Override
+	public void visitCharMultiByte(CharMultiByte p) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	@Override
 	public void visitOption(Option e) {
 		if(!specializeOption(e)) {
 			this.pushFailureJumpPoint();
@@ -938,7 +926,7 @@ public class CParserGenerator extends ParserGenerator {
 	@Override
 	public void visitChoice(Choice e) {
 //		showChoiceInfo(e);
-		if((e.predictedCase != null && isPrediction && (UFlag.is(this.option, Grammar.Prediction)))) {
+		if((e.predictedCase != null && isPrediction && this.option.enabledPrediction)) {
 			predictionCount++;
 			justPredictionCount++;
 			int fid = this.fid++;
@@ -1005,7 +993,7 @@ public class CParserGenerator extends ParserGenerator {
 
 	@Override
 	public void visitNew(New e) {
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.pushFailureJumpPoint();
 			String mark = "mark" + this.fid;
 			this.markStack.push(mark);
@@ -1016,7 +1004,7 @@ public class CParserGenerator extends ParserGenerator {
 
 	@Override
 	public void visitCapture(Capture e) {
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			String label = "EXIT_CAPTURE" + this.fid++;
 			this.file.writeIndent("nez_pushDataLog(ctx, LazyCapture_T, ctx->cur - ctx->inputs, 0, NULL, NULL);");
 			this.gotoLabel(label);
@@ -1029,21 +1017,21 @@ public class CParserGenerator extends ParserGenerator {
 
 	@Override
 	public void visitTagging(Tagging e) {
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.file.writeIndent("nez_pushDataLog(ctx, LazyTag_T, 0, 0, \"" + e.tag.getName() + "\", NULL);");
 		}
 	}
 
 	@Override
 	public void visitReplace(Replace e) {
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.file.writeIndent("nez_pushDataLog(ctx, LazyValue_T, 0, 0, \"" + e.value + "\", NULL);");
 		}
 	}
 
 	@Override
 	public void visitLink(Link e) {
-		if(!PatternMatch) {
+		if(this.option.enabledASTConstruction) {
 			this.pushFailureJumpPoint();
 			String mark = "mark" + this.fid;
 			String label = "EXIT_LINK" + this.fid;
@@ -1137,5 +1125,6 @@ public class CParserGenerator extends ParserGenerator {
 		// TODO Auto-generated method stub
 		
 	}
+
 
 }

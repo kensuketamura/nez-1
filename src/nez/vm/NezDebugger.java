@@ -216,12 +216,12 @@ public class NezDebugger {
 				ConsoleUtils.println("context {");
 				ConsoleUtils.println("  input_name = " + ctx.getResourceName());
 				ConsoleUtils.println("  pos = " + ctx.getPosition());
-				Object obj = ctx.getParsingObject();
+				Object obj = ctx.getLeftObject();
 				if(obj == null) {
-					ConsoleUtils.println("  left = " + ctx.getParsingObject());
+					ConsoleUtils.println("  left = " + ctx.getLeftObject());
 				}
 				else {
-					ConsoleUtils.println("  left = " + ctx.getParsingObject().hashCode());
+					ConsoleUtils.println("  left = " + ctx.getLeftObject().hashCode());
 				}
 				ConsoleUtils.println("}");
 			}
@@ -233,7 +233,7 @@ public class NezDebugger {
 				ConsoleUtils.println("input_name = " + ctx.getResourceName());
 			}
 			else if(o.code.equals("left")) {
-				ConsoleUtils.println("left = " + ctx.getParsingObject());
+				ConsoleUtils.println("left = " + ctx.getLeftObject());
 			}
 			else {
 				ConsoleUtils.println("error: no member nameed \'" + o.code + "\' in context");
@@ -294,25 +294,25 @@ public class NezDebugger {
 		Expression current = code.getExpression();
 		if(e instanceof NonTerminal) {
 			code = exec_code();
-			int stackTop = ((Context) sc).getUsedStackTop();
-			while (stackTop <= ((Context) sc).getUsedStackTop()) {
+			int stackTop = ((Context) sc).getUsedStackTopForDebugger();
+			while (stackTop <= ((Context) sc).getUsedStackTopForDebugger()) {
 				code = exec_code();
 				current = code.getExpression();
 			}
 		}
 		else if(e instanceof Production) {
-			int stackTop = ((Context) sc).getUsedStackTop();
-			while (stackTop <= ((Context) sc).getUsedStackTop()) {
+			int stackTop = ((Context) sc).getUsedStackTopForDebugger();
+			while (stackTop <= ((Context) sc).getUsedStackTopForDebugger()) {
 				code = exec_code();
 				current = code.getExpression();
 			}
 		}
 		else if(e instanceof Link) {
 			code = exec_code();
-			int stackTop = ((Context) sc).getUsedStackTop();
+			int stackTop = ((Context) sc).getUsedStackTopForDebugger();
 			if(code.getExpression() instanceof Production) {
 				code = exec_code();
-				while (stackTop <= ((Context) sc).getUsedStackTop()) {
+				while (stackTop <= ((Context) sc).getUsedStackTopForDebugger()) {
 					code = exec_code();
 					current = code.getExpression();
 				}
@@ -363,9 +363,9 @@ public class NezDebugger {
 
 	public boolean exec(StepOut o) throws TerminationException {
 		Expression current = code.getExpression();
-		int stackTop = ((Context) sc).getUsedStackTop();
+		int stackTop = ((Context) sc).getUsedStackTopForDebugger();
 		code = exec_code();
-		while (stackTop <= ((Context) sc).getUsedStackTop()) {
+		while (stackTop <= ((Context) sc).getUsedStackTopForDebugger()) {
 			code = exec_code();
 			current = code.getExpression();
 		}

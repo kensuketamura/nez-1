@@ -126,7 +126,7 @@ public class GrammarFactory {
 
 	// -----------------------------------------------------------------------
 		
-	public final static Expression newNonTerminal(SourcePosition s, NameSpace peg, String name) {
+	public final static Expression newNonTerminal(SourcePosition s, GrammarFile peg, String name) {
 		return internImpl(s, new NonTerminal(s, peg, name));
 	}
 	
@@ -341,37 +341,17 @@ public class GrammarFactory {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
-//		if(l.ArrayValues[size - 1] instanceof Empty) {
-//			return newOption(s, new Choice(s, l, size-1));  //     e / '' => e?
-//		}
 		return internImpl(s, new Choice(s, l, size));
 	}
 
 	public final static Expression newChoice(SourcePosition s, Expression p, Expression p2) {
+		if(p == null) return newEmpty(s);
+		if(p2 == null) return p;
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		addChoice(l, p);
 		addChoice(l, p2);
 		return newChoice(s, l);
 	}
-
-	@Deprecated //FIXME
-	public final static Expression newDirectChoice(SourcePosition s, UList<Expression> l) {
-		int size = l.size();
-		for(int i = 0; i < size; i++) {
-			if(l.ArrayValues[i] instanceof Empty) {
-				size = i + 1;
-				break;
-			}
-		}
-		if(size == 1) {
-			return l.ArrayValues[0];
-		}
-		if(s != null && isInterned(l)) {
-			s = null;
-		}
-		return internImpl(s, new Choice(s, l, size));
-	}
-
 
 	// AST Construction
 
@@ -454,23 +434,23 @@ public class GrammarFactory {
 		return internImpl(s, new Block(s, e));
 	}
 
-	public final static Expression newLocal(SourcePosition s, NameSpace ns, Tag tableName, Expression e) {
+	public final static Expression newLocal(SourcePosition s, GrammarFile ns, Tag tableName, Expression e) {
 		return internImpl(s, new LocalTable(s, ns, tableName, e));
 	}
 
-	public final static Expression newDefSymbol(SourcePosition s, NameSpace ns, Tag tableName, Expression e) {
+	public final static Expression newDefSymbol(SourcePosition s, GrammarFile ns, Tag tableName, Expression e) {
 		return internImpl(s, new DefSymbol(s, ns, tableName, e));
 	}
 
-	public final static Expression newIsSymbol(SourcePosition s, NameSpace ns,  Tag tableName) {
+	public final static Expression newIsSymbol(SourcePosition s, GrammarFile ns,  Tag tableName) {
 		return internImpl(s, new IsSymbol(s, ns, tableName, /*checkLastSymbolOnly*/true));
 	}
 	
-	public final static Expression newIsaSymbol(SourcePosition s, NameSpace ns, Tag tableName) {
+	public final static Expression newIsaSymbol(SourcePosition s, GrammarFile ns, Tag tableName) {
 		return internImpl(s, new IsSymbol(s, ns, tableName, /*checkLastSymbolOnly*/false));
 	}
 
-	public final static Expression newExists(SourcePosition s, NameSpace ns, Tag tableName) {
+	public final static Expression newExists(SourcePosition s, GrammarFile ns, Tag tableName) {
 		return internImpl(s, new ExistsSymbol(s, ns, tableName));
 	}
 
@@ -494,7 +474,7 @@ public class GrammarFactory {
 	
 	// ----------------------------------------------------------------------
 
-	protected NameSpace getNameSpace() {
+	protected GrammarFile getGrammarFile() {
 		return null;
 	}
 
@@ -503,7 +483,7 @@ public class GrammarFactory {
 	}
 
 	public final Expression newNonTerminal(String name) {
-		return GrammarFactory.newNonTerminal(getSourcePosition(), getNameSpace(), name);
+		return GrammarFactory.newNonTerminal(getSourcePosition(), getGrammarFile(), name);
 	}
 	
 	public final Expression newEmpty() {
@@ -632,23 +612,23 @@ public class GrammarFactory {
 	}
 
 	public final Expression newDefSymbol(String table, Expression ... seq) {
-		return GrammarFactory.newDefSymbol(getSourcePosition(), getNameSpace(), Tag.tag(table), newSequence(seq));
+		return GrammarFactory.newDefSymbol(getSourcePosition(), getGrammarFile(), Tag.tag(table), newSequence(seq));
 	}
 
 	public final Expression newIsSymbol(String table) {
-		return GrammarFactory.newIsSymbol(getSourcePosition(), getNameSpace(), Tag.tag(table));
+		return GrammarFactory.newIsSymbol(getSourcePosition(), getGrammarFile(), Tag.tag(table));
 	}
 	
 	public final Expression newIsaSymbol(String table) {
-		return GrammarFactory.newIsaSymbol(getSourcePosition(), getNameSpace(), Tag.tag(table));
+		return GrammarFactory.newIsaSymbol(getSourcePosition(), getGrammarFile(), Tag.tag(table));
 	}
 
 	public final Expression newExists(String table) {
-		return GrammarFactory.newExists(getSourcePosition(), getNameSpace(), Tag.tag(table));
+		return GrammarFactory.newExists(getSourcePosition(), getGrammarFile(), Tag.tag(table));
 	}
 
 	public final Expression newLocal(String table, Expression ... seq) {
-		return GrammarFactory.newLocal(getSourcePosition(), getNameSpace(), Tag.tag(table), newSequence(seq));
+		return GrammarFactory.newLocal(getSourcePosition(), getGrammarFile(), Tag.tag(table), newSequence(seq));
 	}
 
 	public final Expression newDefIndent() {

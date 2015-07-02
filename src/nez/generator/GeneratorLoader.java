@@ -1,19 +1,16 @@
 package nez.generator;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.TreeMap;
 
 import nez.main.Verbose;
 
 public class GeneratorLoader {
-
 	public final static String GeneratorLoaderPoint = "nez.main.ext.L";
 	static TreeMap<String, Class<?>> classMap = new TreeMap<String, Class<?>>();
 	public static void regist(String key, Class<?> c) {
 		classMap.put(key, c);
 	}
-	public final static boolean supportedGenerator(String key) {
+	public final static boolean isSupported(String key) {
 		if(!classMap.containsKey(key)) {
 			try {
 				Class.forName(GeneratorLoaderPoint + key);
@@ -22,7 +19,7 @@ public class GeneratorLoader {
 		}
 		return classMap.containsKey(key);
 	}
-	public final static NezGenerator newNezGenerator(String key) {
+	public final static NezGenerator load(String key) {
 		Class<?> c = classMap.get(key);
 		if(c != null) {
 			try {
@@ -35,5 +32,4 @@ public class GeneratorLoader {
 		}
 		return null;
 	}
-
 }

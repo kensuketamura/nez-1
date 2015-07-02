@@ -1,19 +1,23 @@
 package nez.vm;
 
 import java.util.HashMap;
+import java.util.List;
 
+import nez.NezOption;
 import nez.lang.And;
 import nez.lang.AnyChar;
 import nez.lang.Block;
 import nez.lang.ByteChar;
 import nez.lang.ByteMap;
 import nez.lang.Capture;
+import nez.lang.CharMultiByte;
 import nez.lang.Choice;
 import nez.lang.DefIndent;
 import nez.lang.DefSymbol;
 import nez.lang.ExistsSymbol;
 import nez.lang.Expression;
 import nez.lang.Grammar;
+import nez.lang.GrammarOptimizer;
 import nez.lang.IsIndent;
 import nez.lang.IsSymbol;
 import nez.lang.Link;
@@ -37,7 +41,7 @@ public class NezCompiler1 extends NezCompiler {
 
 	protected final Instruction commonFailure = new IFail(null);
 
-	public NezCompiler1(int option) {
+	public NezCompiler1(NezOption option) {
 		super(option);
 	}
 
@@ -51,7 +55,7 @@ public class NezCompiler1 extends NezCompiler {
 	
 	protected void encodeProduction(UList<Instruction> codeList, Production p, Instruction next) {
 		String uname = p.getUniqueName();
-		CodePoint code = this.codeMap.get(uname);
+		CodePoint code = this.codePointMap.get(uname);
 		if(code != null) {
 			code.nonmemoStart = encodeExpression(code.localExpression, next, null/*failjump*/);
 			code.start = codeList.size();
@@ -67,7 +71,11 @@ public class NezCompiler1 extends NezCompiler {
 	@Override
 	public NezCode compile(Grammar grammar) {
 		long t = System.nanoTime();
-		initCodeMap(grammar);
+		List<MemoPoint> memoPointList = null;
+		if(option.enabledMemoization || option.enabledPackratParsing) {
+			memoPointList = new UList<MemoPoint>(new MemoPoint[4]);
+		}
+		initCodeMap(grammar, memoPointList);
 		UList<Instruction> codeList = new UList<Instruction>(new Instruction[64]);
 		Production start = grammar.getStartProduction();
 		this.encodeProduction(codeList, start, new IRet(start));
@@ -78,7 +86,7 @@ public class NezCompiler1 extends NezCompiler {
 		}
 		for(Instruction inst : codeList) {
 			if(inst instanceof ICallPush) {
-				CodePoint deref = this.codeMap.get(((ICallPush) inst).rule.getUniqueName());
+				CodePoint deref = this.codePointMap.get(((ICallPush) inst).rule.getUniqueName());
 				if(deref == null) {
 					Verbose.debug("no deref: " + ((ICallPush) inst).rule.getUniqueName());
 				}
@@ -90,8 +98,8 @@ public class NezCompiler1 extends NezCompiler {
 		}
 		long t2 = System.nanoTime();
 		Verbose.printElapsedTime("CompilingTime", t, t2);
-		this.codeMap = null;
-		return new NezCode(codeList.ArrayValues[0]);
+		this.codePointMap = null;
+		return new NezCode(codeList.ArrayValues[0], codeList.size(), memoPointList);
 	}
 
 
@@ -102,8 +110,6 @@ public class NezCompiler1 extends NezCompiler {
 	protected void optimizedInline(Production p) {
 		Verbose.noticeOptimize("inlining", p.getExpression());
 	}
-
-	
 	
 	// encoding
 
@@ -123,6 +129,11 @@ public class NezCompiler1 extends NezCompiler {
 		return new IByteMap(p, next);
 	}
 
+	@Override
+	public Instruction encodeCharMultiByte(CharMultiByte p, Instruction next, Instruction failjump) {
+		return new IMultiChar(p, p.byteSeq, false, next);
+	}
+	
 	public Instruction encodeFail(Expression p) {
 //		return new IFail(p);
 		return this.commonFailure;
@@ -174,41 +185,41 @@ public class NezCompiler1 extends NezCompiler {
 
 	public Instruction encodeNonTerminal(NonTerminal p, Instruction next, Instruction failjump) {
 		Production r = p.getProduction();
-		return new ICallPush(r, p, next);
+		return new ICallPush(r, next);
 	}
 
 	// AST Construction
 
 	public Instruction encodeLink(Link p, Instruction next, Instruction failjump) {
-		if(UFlag.is(this.option, Grammar.ASTConstruction)) {
+		if(this.option.enabledASTConstruction) {
 			return new INodePush(p, encodeExpression(p.get(0), new INodeStore(p, next), failjump));
 		}
 		return encodeExpression(p.get(0), next, failjump);
 	}
 
 	public Instruction encodeNew(New p, Instruction next) {
-		if(UFlag.is(this.option, Grammar.ASTConstruction)) {
+		if(this.option.enabledASTConstruction) {
 			return p.lefted ? new ILeftNew(p, next) : new INew(p, next);
 		}
 		return next;
 	}
 
 	public Instruction encodeCapture(Capture p, Instruction next) {
-		if(UFlag.is(this.option, Grammar.ASTConstruction)) {
+		if(this.option.enabledASTConstruction) {
 			return new ICapture(p, next);
 		}
 		return next;
 	}
 
 	public Instruction encodeTagging(Tagging p, Instruction next) {
-		if(UFlag.is(this.option, Grammar.ASTConstruction)) {
+		if(this.option.enabledASTConstruction) {
 			return new ITag(p, next);
 		}
 		return next;
 	}
 
 	public Instruction encodeReplace(Replace p, Instruction next) {
-		if(UFlag.is(this.option, Grammar.ASTConstruction)) {
+		if(this.option.enabledASTConstruction) {
 			return new IReplace(p, next);
 		}
 		return next;

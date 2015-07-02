@@ -1,7 +1,6 @@
 package nez.lang;
 
 import nez.ast.SourcePosition;
-import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
@@ -47,8 +46,8 @@ public class Match extends Unary {
 		return Typestate.BooleanType;
 	}
 	@Override
-	public short acceptByte(int ch, int option) {
-		return this.inner.acceptByte(ch, option);
+	public short acceptByte(int ch) {
+		return this.inner.acceptByte(ch);
 	}
 	@Override
 	public Instruction encode(NezEncoder bc, Instruction next, Instruction failjump) {

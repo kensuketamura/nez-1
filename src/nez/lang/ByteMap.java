@@ -2,27 +2,18 @@ package nez.lang;
 
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
-import nez.util.UFlag;
-import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
-public class ByteMap extends Terminal implements Consumed {
-	boolean binary = false;
-	public final boolean isBinary() {
-		return this.binary;
-	}
+public class ByteMap extends Char implements Consumed {
 	public boolean[] byteMap; // Immutable
-
 	ByteMap(SourcePosition s, boolean binary, int beginChar, int endChar) {
-		super(s);
+		super(s, binary);
 		this.byteMap = newMap(false);
-		this.binary = binary;
 		appendRange(this.byteMap, beginChar, endChar);
 	}
 	ByteMap(SourcePosition s, boolean binary, boolean[] b) {
-		super(s);
-		this.binary = binary;
+		super(s, binary);
 		this.byteMap = b;
 	}
 	@Override
@@ -66,8 +57,8 @@ public class ByteMap extends Terminal implements Consumed {
 	}
 
 	@Override
-	public short acceptByte(int ch, int option) {
-		return (byteMap[ch]) ? Acceptance.Accept : Acceptance.Reject;
+	public short acceptByte(int ch) {
+		return PossibleAcceptance.acceptByteMap(byteMap, ch);
 	}
 	
 	@Override
@@ -129,11 +120,11 @@ public class ByteMap extends Terminal implements Consumed {
 		}
 	}
 
-	public final static void reverse(boolean[] byteMap, int option) {
+	public final static void reverse(boolean[] byteMap, boolean isBinary) {
 		for(int i = 0; i < 256; i++) {
 			byteMap[i] = !byteMap[i];
 		}
-		if(!UFlag.is(option, Grammar.Binary)) {
+		if(!isBinary) {
 			byteMap[0] = false;
 		}
 	}

@@ -1,9 +1,9 @@
 package nez.vm;
 
 class ContextStack {
-	boolean debugFailStackFlag;
+	//boolean debugFailStackFlag;
 	Instruction jump;
 	long pos;
-	int  prevFailTop;
-	OperationLog lastLog;
+	int  prevFailCatch;
+	ASTLog topASTLog;
 }

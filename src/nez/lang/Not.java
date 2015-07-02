@@ -1,5 +1,6 @@
 package nez.lang;
 
+import nez.NezOption;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
 import nez.util.UFlag;
@@ -45,36 +46,8 @@ public class Not extends Unary {
 	}
 	
 	@Override
-	public short acceptByte(int ch, int option) {
-		/* The code below works only if a single character in !(e) */
-		/* we must accept 'i' for !'int' 'i' */
-		Expression p = this.inner; //optimize(option);
-		if(p instanceof Choice) {
-			for(Expression pp : p) {
-				short r = acceptByte(pp, ch, option);
-				if(r != Acceptance.Unconsumed) {
-					return r;
-				}
-			}
-			return Acceptance.Unconsumed;
-		}
-		else {
-			return acceptByte(p, ch, option);
-		}
-	}
-	private short acceptByte(Expression p, int ch, int option) {
-		if(p instanceof ByteChar) {
-			return ((ByteChar) p).byteChar == ch ? Acceptance.Reject : Acceptance.Unconsumed;
-		}
-		if(p instanceof ByteMap) {
-			return ((ByteMap) p).byteMap[ch] ? Acceptance.Reject : Acceptance.Unconsumed;
-		}
-		if(p instanceof AnyChar) {
-			if(ch == Source.BinaryEOF) return Acceptance.Accept;
-			if(ch == 0 && !UFlag.is(option, Grammar.Binary)) return Acceptance.Accept;
-			return Acceptance.Reject;
-		}
-		return Acceptance.Unconsumed;
+	public short acceptByte(int ch) {
+		return PossibleAcceptance.acceptNot(this, ch);
 	}
 
 	@Override

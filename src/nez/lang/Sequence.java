@@ -2,18 +2,17 @@ package nez.lang;
 
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
-import nez.util.UFlag;
 import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
 public class Sequence extends Expression {
 	Expression first;
-	Expression last;
-	Sequence(SourcePosition s, Expression first, Expression last) {
+	Expression next;
+	Sequence(SourcePosition s, Expression first, Expression next) {
 		super(s);
 		this.first = first;
-		this.last  = last;
+		this.next  = next;
 	}
 	@Override
 	public final boolean equalsExpression(Expression o) {
@@ -28,7 +27,7 @@ public class Sequence extends Expression {
 	}
 	@Override
 	public final Expression get(int index) {
-		return index == 0 ? this.first : this.last;
+		return index == 0 ? this.first : this.next;
 	}
 	@Override
 	public final Expression set(int index, Expression e) {
@@ -37,8 +36,8 @@ public class Sequence extends Expression {
 			this.first = e;
 		}
 		else {
-			p = this.last;
-			this.last = e;
+			p = this.next;
+			this.next = e;
 		}
 		return p;
 	}
@@ -46,13 +45,9 @@ public class Sequence extends Expression {
 	public Expression getFirst() {
 		return this.first;
 	}
-	public Expression getLast() {
-		return this.last;
+	public Expression getNext() {
+		return this.next;
 	}
-
-//	Sequence(SourcePosition s, UList<Expression> l) {
-//		super(s, l, l.size());
-//	}
 	@Override
 	public String getPredicate() {
 		return "seq";
@@ -63,14 +58,14 @@ public class Sequence extends Expression {
 	}
 	@Override
 	protected final void format(StringBuilder sb) {
-		if(this.first instanceof ByteChar && this.last.getFirst() instanceof ByteChar) {
+		if(this.first instanceof ByteChar && this.next.getFirst() instanceof ByteChar) {
 			sb.append("'");
-			formatString(sb, (ByteChar)this.first, this.last);
+			formatString(sb, (ByteChar)this.first, this.next);
 		}
 		else {
 			formatInner(sb, this.first);
 			sb.append(" ");
-			formatInner(sb, this.last);
+			formatInner(sb, this.next);
 		}
 	}
 	
@@ -85,7 +80,7 @@ public class Sequence extends Expression {
 			b = null;
 			if(first instanceof ByteChar) {
 				b = (ByteChar)first;
-				next = next.getLast();
+				next = next.getNext();
 			}
 		}
 		sb.append("'");
@@ -103,28 +98,50 @@ public class Sequence extends Expression {
 			e.format(sb);
 		}
 	}
-
-	private int appendAsString(StringBuilder sb, int start) {
-		int end = this.size();
-		String s = "";
-		for(int i = start; i < end; i++) {
-			Expression e = this.get(i);
-			if(e instanceof ByteChar) {
-				char c = (char)(((ByteChar) e).byteChar);
-				if(c >= ' ' && c < 127) {
-					s += c;
-					continue;
-				}
+	
+	public final Expression convertToMultiByte() {
+		Expression f = this.getFirst();
+		Expression s = this.getNext().getFirst();
+		if(f instanceof ByteChar || s instanceof ByteChar) {
+			UList<Byte> l = new UList<Byte>(new Byte[16]);
+			l.add(((byte)((ByteChar)f).byteChar));
+			Expression next = convertMultiByte(this, l);
+			Expression mb = this.newCharMultiByte(((ByteChar)f).isBinary(), toByteSeq(l));
+			if(next != null) {
+				return this.newSequence(mb, next);
 			}
-			end = i;
-			break;
+			return mb;
 		}
-		if(s.length() > 1) {
-			sb.append(StringUtils.quoteString('\'', s, '\''));
-		}
-		return end - 1;
+		return this;
 	}
 
+	private Expression newCharMultiByte(boolean binary, byte[] byteSeq) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	private Expression convertMultiByte(Sequence seq, UList<Byte> l) {
+		Expression s = seq.getNext().getFirst();
+		while(s instanceof ByteChar) {
+			l.add((byte)((ByteChar)s).byteChar);
+			Expression next = seq.getNext();
+			if(next instanceof Sequence) {
+				seq = (Sequence)next;
+				s = seq.getNext().getFirst();
+				continue;
+			}
+			return null;
+		}
+		return seq.getNext();
+	}
+	
+	private byte[] toByteSeq(UList<Byte> l) {
+		byte[] byteSeq = new byte[l.size()];
+		for(int i = 0; i < l.size(); i++) {
+			byteSeq[i] = l.ArrayValues[i];
+		}
+		return byteSeq;
+	}
+	
 	@Override
 	public Expression reshape(GrammarReshaper m) {
 		return m.reshapeSequence(this);
@@ -159,8 +176,12 @@ public class Sequence extends Expression {
 	}
 
 	@Override
-	public short acceptByte(int ch, int option) {
-		return Acceptance.acceptSequence(this, ch, option);
+	public short acceptByte(int ch) {
+		short r = this.first.acceptByte(ch);
+		if(r == PossibleAcceptance.Unconsumed) {
+			return this.next.acceptByte(ch);
+		}
+		return r;
 	}
 
 	public final boolean isMultiChar() {

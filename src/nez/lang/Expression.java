@@ -60,7 +60,7 @@ public abstract class Expression extends AbstractList<Expression> {
 		return this;
 	}
 
-	public Expression getLast() {
+	public Expression getNext() {
 		return null;
 	}
 
@@ -81,7 +81,7 @@ public abstract class Expression extends AbstractList<Expression> {
 	
 	public abstract int inferTypestate(Visa v);
 	
-	public abstract short acceptByte(int ch, int option);
+	public abstract short acceptByte(int ch);
 	
 	@Override
 	public final String toString() {
@@ -152,6 +152,10 @@ public abstract class Expression extends AbstractList<Expression> {
 		return GrammarFactory.newFailure(this.getSourcePosition());
 	}
 
+	public final Expression newByteMap(boolean isBinary, boolean[] byteMap) {
+		return GrammarFactory.newByteMap(this.getSourcePosition(), isBinary, byteMap);
+	}
+	
 	public final Expression newSequence(Expression e, Expression e2) {
 		return GrammarFactory.newSequence(this.getSourcePosition(), e, e2);
 	}

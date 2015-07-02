@@ -6,11 +6,11 @@ import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
-public class IsSymbol extends Terminal implements Contextual {
+public class IsSymbol extends Expression implements Contextual {
 	public final Tag tableName;
-	final NameSpace ns;
+	final GrammarFile ns;
 	public final boolean checkLastSymbolOnly;
-	IsSymbol(SourcePosition s, NameSpace ns, Tag tableName, boolean checkLastSymbolOnly) {
+	IsSymbol(SourcePosition s, GrammarFile ns, Tag tableName, boolean checkLastSymbolOnly) {
 		super(s);
 		this.ns = ns;
 		this.tableName = tableName;
@@ -25,7 +25,7 @@ public class IsSymbol extends Terminal implements Contextual {
 		return false;
 	}
 
-	public final NameSpace getNameSpace() {
+	public final GrammarFile getGrammarFile() {
 		return ns;
 	}
 
@@ -68,11 +68,11 @@ public class IsSymbol extends Terminal implements Contextual {
 		return Typestate.BooleanType;
 	}
 	@Override
-	public short acceptByte(int ch, int option) {
+	public short acceptByte(int ch) {
 		if(this.getSymbolExpression() != null) {
-			return this.getSymbolExpression().acceptByte(ch, option);
+			return this.getSymbolExpression().acceptByte(ch);
 		}
-		return Acceptance.Accept;
+		return PossibleAcceptance.Accept;
 	}
 	@Override
 	public Instruction encode(NezEncoder bc, Instruction next, Instruction failjump) {

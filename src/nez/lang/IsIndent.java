@@ -5,7 +5,7 @@ import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
-public class IsIndent extends Terminal implements Contextual {
+public class IsIndent extends Expression implements Contextual {
 	IsIndent(SourcePosition s) {
 		super(s);
 	}
@@ -33,11 +33,16 @@ public class IsIndent extends Terminal implements Contextual {
 	}
 
 	@Override
-	public short acceptByte(int ch, int option) {
+	public int inferTypestate(Visa v) {
+		return Typestate.BooleanType;
+	}
+
+	@Override
+	public short acceptByte(int ch) {
 		if (ch == '\t' || ch == ' ') {
-			return Acceptance.Accept;
+			return PossibleAcceptance.Accept;
 		}
-		return Acceptance.Unconsumed;
+		return PossibleAcceptance.Unconsumed;
 	}
 
 	@Override

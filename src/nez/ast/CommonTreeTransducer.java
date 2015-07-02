@@ -1,8 +1,8 @@
 package nez.ast;
 
-public class CommonTreeFactory extends ParsingFactory {
-	private static final Tag Token = Tag.tag("Token");
-	private static final Tag Tree = Tag.tag("Tree");
+public class CommonTreeTransducer extends TreeTransducer {
+	private static final Tag Token = Tag.tag("token");
+	private static final Tag Tree = Tag.tag("tree");
 	
 	@Override
 	public Object newNode(Tag tag, Source s, long spos, long epos, int size, Object value) {

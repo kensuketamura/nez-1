@@ -6,16 +6,11 @@ import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NezEncoder;
 
-public class ByteChar extends Terminal implements Consumed {
-	boolean binary;
-	public final boolean isBinary() {
-		return this.binary;
-	}
+public class ByteChar extends Char implements Consumed {
 	public int byteChar;
 	ByteChar(SourcePosition s, boolean binary, int ch) {
-		super(s);
+		super(s, binary);
 		this.byteChar = ch;
-		this.binary = binary;
 	}
 	@Override
 	public final boolean equalsExpression(Expression o) {
@@ -45,8 +40,8 @@ public class ByteChar extends Terminal implements Consumed {
 		return true;
 	}
 	@Override
-	public short acceptByte(int ch, int option) {
-		return (byteChar == ch) ? Acceptance.Accept : Acceptance.Reject;
+	public short acceptByte(int ch) {
+		return PossibleAcceptance.acceptByteChar(byteChar, ch);
 	}
 	@Override
 	public Instruction encode(NezEncoder bc, Instruction next, Instruction failjump) {

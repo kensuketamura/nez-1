@@ -15,14 +15,13 @@ import nez.lang.Empty;
 import nez.lang.Expression;
 import nez.lang.GrammarFactory;
 import nez.lang.Failure;
-import nez.lang.Grammar;
 import nez.lang.GrammarVisitor;
 import nez.lang.Link;
-import nez.lang.NameSpace;
+import nez.lang.GrammarFile;
 import nez.lang.NonTerminal;
 import nez.lang.Not;
 import nez.lang.Option;
-import nez.lang.Acceptance;
+import nez.lang.PossibleAcceptance;
 import nez.lang.Production;
 import nez.lang.Repetition;
 import nez.lang.Replace;
@@ -47,7 +46,7 @@ public class Compiler extends GrammarVisitor {
 	
 	boolean PatternMatching = false;
 	
-	NameSpace peg;
+	GrammarFile peg;
 	Module module;
 	Function func;
 	BasicBlock currentBB;
@@ -114,7 +113,7 @@ public class Compiler extends GrammarVisitor {
 	
 	int codeIndex;
 	
-	public void writeByteCode(String grammerfileName, String outputFileName, NameSpace peg) {
+	public void writeByteCode(String grammerfileName, String outputFileName, GrammarFile peg) {
 		//generateProfileCode(peg);
 		//System.out.println("choiceCase: " + choiceCaseCount + "\nconstructor: " + constructorCount);
 		byte[] byteCode = new byte[this.codeIndex * 256];
@@ -774,8 +773,8 @@ public class Compiler extends GrammarVisitor {
 			else {
 				// FIXME:
 				// AnyChar behaves differently in cases of Binary
-				short r = e.acceptByte(c, Grammar.Binary); 
-				if(r != Acceptance.Reject) {
+				short r = e.acceptByte(c); 
+				if(r != PossibleAcceptance.Reject) {
 					l.add(e);
 				}
 			}

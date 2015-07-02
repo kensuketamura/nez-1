@@ -34,6 +34,10 @@ public class GrammarReshaper {
 		return e;
 	}
 
+	public Expression reshapeCharMultiByte(CharMultiByte e) {
+		return e;
+	}
+
 	public Expression reshapeNonTerminal(NonTerminal e) {
 		return e;
 	}
@@ -66,8 +70,8 @@ public class GrammarReshaper {
 
 	public Expression reshapeSequence(Sequence e) {
 		Expression first = e.getFirst().reshape(this);
-		Expression last = e.getLast().reshape(this);
-		if(first == e.getFirst() && last == e.getLast()) {
+		Expression last = e.getNext().reshape(this);
+		if(first == e.getFirst() && last == e.getNext()) {
 			return e;
 		}
 		return e.newSequence(first, last);
@@ -261,14 +265,14 @@ public class GrammarReshaper {
 			e.inner = inner;
 			return e;
 		}
-		return (e.get(0) != inner) ? GrammarFactory.newLocal(e.s, e.getNameSpace(), e.getTable(), inner) : e;
+		return (e.get(0) != inner) ? GrammarFactory.newLocal(e.s, e.getGrammarFile(), e.getTable(), inner) : e;
 	}
 	protected final Expression updateInner(DefSymbol e, Expression inner) {
 		if(!e.isInterned()) {
 			e.inner = inner;
 			return e;
 		}
-		return (e.get(0) != inner) ? GrammarFactory.newDefSymbol(e.s, e.getNameSpace(), e.getTable(), inner) : e;
+		return (e.get(0) != inner) ? GrammarFactory.newDefSymbol(e.s, e.getGrammarFile(), e.getTable(), inner) : e;
 	}
 	protected final Expression updateInner(OnFlag e, Expression inner) {
 		if(!e.isInterned()) {
@@ -277,6 +281,7 @@ public class GrammarReshaper {
 		}
 		return (e.get(0) != inner) ? GrammarFactory.newOnFlag(e.s, e.predicate, e.flagName, inner) : e;
 	}
+
 }
 
 class ASTConstructionEliminator extends GrammarReshaper {
@@ -293,7 +298,7 @@ class ASTConstructionEliminator extends GrammarReshaper {
 		if(renaming) {
 			Production r = removeASTOperator(e.getProduction());
 			if(!e.getLocalName().equals(r.getLocalName())) {
-				return GrammarFactory.newNonTerminal(e.s, r.getNameSpace(), r.getLocalName());
+				return GrammarFactory.newNonTerminal(e.s, r.getGrammarFile(), r.getLocalName());
 			}
 		}
 		return e;
@@ -304,9 +309,9 @@ class ASTConstructionEliminator extends GrammarReshaper {
 			return p;
 		}
 		String name = "~" + p.getLocalName();
-		Production r = p.getNameSpace().getProduction(name);
+		Production r = p.getGrammarFile().getProduction(name);
 		if(r == null) {
-			r = p.getNameSpace().newReducedProduction(name, p, this);
+			r = p.getGrammarFile().newReducedProduction(name, p, this);
 		}
 		return r;
 	}

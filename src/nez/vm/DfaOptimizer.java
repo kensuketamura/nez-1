@@ -1,30 +1,25 @@
 package nez.vm;
 
-import java.util.HashMap;
-
 import nez.lang.Choice;
 import nez.lang.Empty;
 import nez.lang.Expression;
 import nez.lang.Grammar;
 import nez.lang.GrammarFactory;
 import nez.lang.GrammarReshaper;
-import nez.lang.NameSpace;
+import nez.lang.GrammarFile;
 import nez.lang.NonTerminal;
 import nez.lang.Option;
-import nez.lang.Acceptance;
+import nez.lang.PossibleAcceptance;
 import nez.lang.Production;
 import nez.lang.Repetition;
 import nez.lang.Repetition1;
 import nez.lang.Sequence;
-import nez.util.StringUtils;
-import nez.util.UFlag;
 import nez.util.UList;
-import nez.util.UMap;
 
 public class DfaOptimizer extends GrammarReshaper {
 
 	public static final Grammar optimize(Grammar g) {
-		NameSpace ns = NameSpace.newNameSpace();
+		GrammarFile ns = GrammarFile.newGrammarFile(g.getNezOption().clone());
 		GrammarReshaper dup = new DuplicateGrammar(ns);
 		GrammarReshaper inlining = new InliningChoice();
 		for(Production p : g.getProductionList()) {
@@ -36,13 +31,12 @@ public class DfaOptimizer extends GrammarReshaper {
 		g = ns.newGrammar(g.getStartProduction().getLocalName());
 		return g;
 	}
-
 }
 
 class DuplicateGrammar extends GrammarReshaper {
-	NameSpace ns;
+	GrammarFile ns;
 	int c = 0;
-	DuplicateGrammar(NameSpace ns) {
+	DuplicateGrammar(GrammarFile ns) {
 		this.ns = ns;
 	}
 	public Expression reshapeProduction(Production p) {
@@ -183,9 +177,9 @@ class InliningChoice extends GrammarReshaper {
 		if(this.inlining) {
 			Expression first = e.getFirst().reshape(this);
 			this.inlining = false;
-			Expression last = e.getLast().reshape(this);
+			Expression last = e.getNext().reshape(this);
 			this.inlining = true;
-			if(first == e.getFirst() && last == e.getLast()) {
+			if(first == e.getFirst() && last == e.getNext()) {
 				return e;
 			}
 			return e.newSequence(first, last);
@@ -200,8 +194,8 @@ class InliningChoice extends GrammarReshaper {
 		UList<Expression> newChoiceList = null;
 		boolean commonPrifixed = false;
 		for(Expression p: choiceList) {
-			short r = p.acceptByte(ch, 0);
-			if(r == Acceptance.Reject) {
+			short r = p.acceptByte(ch);
+			if(r == PossibleAcceptance.Reject) {
 				continue;
 			}
 			if(first == null) {

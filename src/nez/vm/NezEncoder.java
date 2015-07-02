@@ -2,21 +2,23 @@ package nez.vm;
 
 
 import java.util.HashMap;
-import java.util.TreeMap;
+import java.util.List;
 
+import nez.NezOption;
 import nez.lang.And;
 import nez.lang.AnyChar;
 import nez.lang.Block;
 import nez.lang.ByteChar;
 import nez.lang.ByteMap;
 import nez.lang.Capture;
+import nez.lang.CharMultiByte;
 import nez.lang.Choice;
 import nez.lang.DefIndent;
 import nez.lang.DefSymbol;
 import nez.lang.ExistsSymbol;
 import nez.lang.Expression;
 import nez.lang.Grammar;
-import nez.lang.GrammarFactory;
+import nez.lang.GrammarOptimizer;
 import nez.lang.IfFlag;
 import nez.lang.IsIndent;
 import nez.lang.IsSymbol;
@@ -35,31 +37,25 @@ import nez.lang.Sequence;
 import nez.lang.Tagging;
 import nez.lang.Typestate;
 import nez.main.Verbose;
-import nez.util.UFlag;
-import nez.util.UList;
 
 public abstract class NezEncoder {
-	protected int option;
+	protected NezOption option;
 		
-	public NezEncoder(int option) {
+	public NezEncoder(NezOption option) {
 		this.option = option;
-	}
-	
-	public final boolean is(int grammarOption) {
-		return UFlag.is(this.option, grammarOption);
 	}
 
 	/* CodeMap */
 	
-	protected HashMap<String, CodePoint> codeMap = null;
+	protected HashMap<String, CodePoint> codePointMap = null;
 		
 	protected CodePoint newCodePoint(Production p, Expression localExpression) {
 		return new CodePoint(p, localExpression);
 	}
 	
 	protected CodePoint getCodePoint(Production p) {
-		if(this.codeMap != null) {
-			return codeMap.get(p.getUniqueName());
+		if(this.codePointMap != null) {
+			return codePointMap.get(p.getUniqueName());
 		}
 		return null;
 	}
@@ -68,40 +64,21 @@ public abstract class NezEncoder {
 		return p.getExpression();
 	}
 	
-	protected void analyizeProductionInlining(CodePoint pcode) {
-		//Verbose.debug("ref " + pcode.production.getLocalName() + " " + pcode.ref);
-		if(pcode.ref == 1 || GrammarOptimizer.isCharacterTerminal(pcode.localExpression)) {
-			pcode.inlining = true;
-		}
-	}
-
-	protected int analyizeProductionMemoizing(CodePoint pcode, int memoId) {
-		if(pcode.inlining) {
-			return memoId;
-		}
-		Production p = pcode.production;
-		if(pcode.ref > 3 && p.inferTypestate() != Typestate.OperationType) {
-			pcode.memoPoint = new MemoPoint(memoId++, p.getLocalName(), pcode.localExpression, false);
-			Verbose.debug("memo " + p.getLocalName() + " " + pcode.memoPoint.id + " pure? " + p.isNoNTreeConstruction());
-		}
-		return memoId;
-	}
-
 	void count(Production p) {
 		String uname = p.getUniqueName();
-		CodePoint c = this.codeMap.get(uname);
+		CodePoint c = this.codePointMap.get(uname);
 		if(c == null) {
 			Expression deref = optimizeLocalProduction(p);
 			String key = "#" + deref.getId();
-			c = this.codeMap.get(key);
+			c = this.codePointMap.get(key);
 			if(c == null) {
 				c = newCodePoint(p, deref);
-				codeMap.put(key, c);
+				codePointMap.put(key, c);
 			}
 //			else {
 //				Verbose.debug("alias " + uname + ", " + c.production.getUniqueName());
 //			}
-			codeMap.put(uname, c);
+			codePointMap.put(uname, c);
 		}
 		c.ref++;
 	}
@@ -116,8 +93,8 @@ public abstract class NezEncoder {
 		}
 	}
 
-	protected void initCodeMap(Grammar grammar) {
-		this.codeMap = new HashMap<String, CodePoint>();
+	protected void initCodeMap(Grammar grammar, List<MemoPoint> memoPointList) {
+		this.codePointMap = new HashMap<String, CodePoint>();
 		Production start = grammar.getStartProduction();
 		count(start);
 		countNonTerminalReference(start.getExpression());
@@ -126,21 +103,46 @@ public abstract class NezEncoder {
 				this.countNonTerminalReference(p.getExpression());
 			}
 		}
-		if(UFlag.is(option, Grammar.Inlining)) {
+		if(option.enabledInlining) {
 			for(Production p : grammar.getProductionList()) {
-				CodePoint pcode = this.codeMap.get(p.getUniqueName());
-				if(pcode != null) {
-					this.analyizeProductionInlining(pcode);
-				}
+				CodePoint cp = this.codePointMap.get(p.getUniqueName());
+				this.checkInlining(cp);
+//				System.out.println(p.getUniqueName() + " cp = " + cp);
+//				if(cp != null) {
+//					this.checkInlining(cp);
+//				}
 			}
 		}
-		if(UFlag.is(option, Grammar.PackratParsing)) {
-			int memoId = 0;
+		if(memoPointList != null) {
 			for(Production p : grammar.getProductionList()) {
-				CodePoint pcode = this.codeMap.get(p.getUniqueName());
-				if(pcode != null) {
-					memoId = this.analyizeProductionMemoizing(pcode, memoId);
-				}
+				CodePoint cp = this.codePointMap.get(p.getUniqueName());
+				//System.out.println(p.getUniqueName() + " cp = " + cp);
+				this.checkMemoizing(cp, memoPointList);
+//				if(cp != null) {
+//					this.checkMemoizing(cp, memoPointList);
+//				}
+			}
+		}
+	}
+	
+	protected void checkInlining(CodePoint cp) {
+		//Verbose.debug("ref " + cp.production.getLocalName() + " " + cp.ref);
+		if(cp.ref == 1 || GrammarOptimizer.isSingleCharacter(cp.localExpression)) {
+			cp.inlining = true;
+		}
+	}
+
+	protected void checkMemoizing(CodePoint cp, List<MemoPoint> memoPointList) {
+		if(cp.inlining || cp.memoPoint != null) {
+			return ;
+		}
+		Production p = cp.production;
+		if(cp.ref > 2 && p.inferTypestate() != Typestate.OperationType) {
+			int memoId = memoPointList.size();
+			cp.memoPoint = new MemoPoint(memoId, p.getLocalName(), cp.localExpression, p.isContextual());
+			memoPointList.add(cp.memoPoint);
+			if(Verbose.PackratParsing) {
+				Verbose.debug("memo " + cp.memoPoint + " ref="+ cp.ref + " pure? " + p.isNoNTreeConstruction() + " rec? " + p.isRecursive());
 			}
 		}
 	}
@@ -155,6 +157,8 @@ public abstract class NezEncoder {
 	public abstract Instruction encodeAnyChar(AnyChar p, Instruction next, Instruction failjump);
 	public abstract Instruction encodeByteChar(ByteChar p, Instruction next, Instruction failjump);
 	public abstract Instruction encodeByteMap(ByteMap p, Instruction next, Instruction failjump);
+	public abstract Instruction encodeCharMultiByte(CharMultiByte p, Instruction next, Instruction failjump);
+
 	public abstract Instruction encodeOption(Option p, Instruction next);
 	public abstract Instruction encodeRepetition(Repetition p, Instruction next);
 	public abstract Instruction encodeRepetition1(Repetition1 p, Instruction next, Instruction failjump);
@@ -194,5 +198,6 @@ public abstract class NezEncoder {
 	public Instruction encodeIfFlag(IfFlag ifFlag, Instruction next, Instruction failjump) {
 		return next;
 	}
+
 	
 }

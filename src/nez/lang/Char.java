@@ -3,9 +3,14 @@ import java.util.TreeMap;
 
 import nez.ast.SourcePosition;
 
-public abstract class Terminal extends Expression {
-	Terminal(SourcePosition s) {
+public abstract class Char extends Expression {
+	boolean binary;
+	public final boolean isBinary() {
+		return this.binary;
+	}
+	Char(SourcePosition s, boolean binary) {
 		super(s);
+		this.binary = binary;
 	}
 	@Override
 	public final Expression get(int index) {
@@ -19,5 +24,4 @@ public abstract class Terminal extends Expression {
 	public int inferTypestate(Visa v) {
 		return Typestate.BooleanType;
 	}
-
 }
