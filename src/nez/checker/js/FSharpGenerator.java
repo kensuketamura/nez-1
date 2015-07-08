@@ -2,6 +2,7 @@ package nez.checker.js;
 
 import java.util.ArrayList;
 
+import nez.ast.Source;
 import nez.checker.ModifiableTree;
 import nez.checker.SourceGenerator;
 
@@ -37,7 +38,11 @@ public class FSharpGenerator extends SourceGenerator {
 			if (parent.is(JSTag.TAG_VAR_DECL) || parent.is(JSTag.TAG_PROPERTY) || parent.is(JSTag.TAG_ASSIGN)) {
 				// case: function is lambda
 				if (!node.get(2).is(JSTag.TAG_NAME)) {
-					newScope = new FSharpScope(parent.get(0).getText(), node, parentScope);
+					if(parent.get(0).is(JSTag.TAG_NAME)){
+						newScope = new FSharpScope(parent.get(0).getText(), node, parentScope);
+					} else if(parent.get(0).is(JSTag.TAG_FIELD)){
+						newScope = new FSharpScope(parent.get(0).get(1).getText(), node, parentScope);
+					}
 				}
 				// case: function is not lambda. function is named local name.
 				else {
@@ -110,16 +115,18 @@ public class FSharpGenerator extends SourceGenerator {
 	}
 
 	private boolean findFieldAssignStmt(ModifiableTree node) {
+		findFieldAssignStmt(node, fsClasses.get(0));
+		return true;
+	}
+	
+	private boolean findFieldAssignStmt(ModifiableTree node, FSharpScope currentScope) {
 		// case: object.property = value;
 		if (node.size() > 0) {
 			ModifiableTree nameNode = node.get(0);
 			if (node.is(JSTag.TAG_ASSIGN) && nameNode.is(JSTag.TAG_FIELD)) {
-				ArrayList<String> field = getFieldElements(nameNode);
-				for (String element : field) {
-					if (element == "prototype") {
-
-					}
-				}
+				ArrayList<String> fields = getFieldElements(nameNode);
+				FSharpScope ownerClass = searchScopeByObjName(fields.get(fields.size() - 2), currentScope);
+				ownerClass.addMember(node);
 				return true;
 			}
 		}
@@ -131,8 +138,8 @@ public class FSharpGenerator extends SourceGenerator {
 		FSharpScope classScope = null;
 		ArrayList<String> fieldElements = new ArrayList<String>();
 		int elementNumFromRight = 0;
-		while (fieldNode.is(JSTag.TAG_FIELD) || fieldNode.is(JSTag.TAG_APPLY)
-				&& classScope == null) {
+		while ( ( fieldNode.is(JSTag.TAG_FIELD) || fieldNode.is(JSTag.TAG_APPLY) )
+				&& classScope == null ) {
 			if (fieldNode.is(JSTag.TAG_FIELD)) {
 				elementNumFromRight++;
 				fieldElements.add(fieldNode.get(1).getText());
@@ -140,42 +147,29 @@ public class FSharpGenerator extends SourceGenerator {
 			}
 			fieldNode = fieldNode.get(0);
 		}
-		if (classScope != null && elementNumFromRight < 1) {
-			ModifiableTree fixedNode = new ModifiableTree(JSTag.TAG_FIELD,
-					node.getSource(), node.getSourcePosition(),
-					node.getSourcePosition() + node.getLength(), 2, "");
-			ModifiableTree newNode = new ModifiableTree(JSTag.TAG_NEW,
-					node.getSource(), node.getSourcePosition(),
-					node.getSourcePosition() + node.getLength(), 2, "new");
-			ModifiableTree constructorNode = new ModifiableTree(JSTag.TAG_NAME,
-					node.getSource(), node.getSourcePosition(),
-					node.getSourcePosition() + node.getLength(), 0,
-					classScope.getScopeName());
-			ModifiableTree argsNode = new ModifiableTree(JSTag.TAG_LIST,
-					node.getSource(), node.getSourcePosition(),
-					node.getSourcePosition() + node.getLength(), 0, null);
-			ArrayList<String> fieldStrings = getFieldElements(node);
-			ModifiableTree callNode = new ModifiableTree(JSTag.TAG_NAME,
-					node.getSource(), node.getSourcePosition(),
-					node.getSourcePosition() + node.getLength(), 0,
-					fieldStrings.get(fieldStrings.size() - 1));
+		if (classScope != null && elementNumFromRight < 2) {
+			Source src = node.getSource();
+			long spos = node.getSourcePosition();
+			int len = node.getLength();
+			ModifiableTree fixedNode = new ModifiableTree(JSTag.TAG_FIELD, src, spos, spos, 2, "");
+			ModifiableTree newNode = new ModifiableTree(JSTag.TAG_NEW, src, spos, spos, 2, "");
+			ModifiableTree constructorNode = new ModifiableTree(JSTag.TAG_NAME, src, spos, spos + len, 0, classScope.getScopeName());
+			ModifiableTree argsNode = new ModifiableTree(JSTag.TAG_LIST, src, spos, spos, 0, null);
+			//ArrayList<String> fieldStrings = getFieldElements(node);
+			ModifiableTree callNode = new ModifiableTree(JSTag.TAG_NAME, src, spos, spos + len, 0, fieldElements.get(0));
 			fixedNode.set(0, newNode);
 			fixedNode.set(1, callNode);
 			newNode.set(0, constructorNode);
 			newNode.set(1, argsNode);
 			node.getParent().set(node.getIndexInParentNode(), fixedNode);
-		} else if (classScope != null && elementNumFromRight >= 1) {
-			for (int i = fieldElements.size() - elementNumFromRight - 1; i < fieldElements
-					.size(); i++) {
+		} else if (classScope != null && elementNumFromRight >= 2) {
+			for (int i = fieldElements.size() - elementNumFromRight - 1; i < fieldElements.size(); i++) {
 				if (searchScopeByFuncOrVarName(fieldElements.get(i), currentScope) == null) {
-					ModifiableTree fixedNode = new ModifiableTree(
-							JSTag.TAG_APPLY, node.getSource(),
-							node.getSourcePosition(), node.getSourcePosition()
-									+ node.getLength(), 2, "");
-					ModifiableTree funcNode = new ModifiableTree(
-							JSTag.TAG_NAME, node.getSource(),
-							node.getSourcePosition(), node.getSourcePosition()
-									+ node.getLength(), 0, fieldElements.get(i));
+					Source src = node.getSource();
+					long spos = node.getSourcePosition();
+					int len = node.getLength();
+					ModifiableTree fixedNode = new ModifiableTree(JSTag.TAG_APPLY, src, spos, spos + len, 2, "");
+					ModifiableTree funcNode = new ModifiableTree(JSTag.TAG_NAME, src, spos, spos + len, 0, fieldElements.get(i));
 
 				}
 			}
@@ -192,6 +186,21 @@ public class FSharpGenerator extends SourceGenerator {
 		}
 		for (FSharpVar fv : currentScope.varList) {
 			if (fv.getTrueName() == name) {
+				result = currentScope;
+			}
+		}
+		// search it from parent scope
+		if (result == null && currentScope.parent != null) {
+			result = searchScopeByFuncOrVarName(name, currentScope.parent);
+		}
+		return result;
+	}
+	
+	private FSharpScope searchScopeByObjName(String name, FSharpScope currentScope) {
+		FSharpScope result = null;
+		// search variable and function from current scope
+		for (FSharpVar instVar : currentScope.instanceList) {
+			if(instVar.getTrueName() == name){
 				result = currentScope;
 			}
 		}

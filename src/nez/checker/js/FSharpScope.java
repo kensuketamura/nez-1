@@ -21,6 +21,7 @@ public class FSharpScope {
 	}
 	public ScopeType type;
 	public ArrayList<ModifiableTree> returnList;
+	public ArrayList<FSharpVar> instanceList;
 	
 	public FSharpScope(String name){
 		this.name = name;
@@ -33,6 +34,7 @@ public class FSharpScope {
 		this.varList = new ArrayList<FSharpVar>();
 		this.funcList = new ArrayList<FSharpFunc>();
 		this.returnList = new ArrayList<ModifiableTree>();
+		this.instanceList = new ArrayList<FSharpVar>();
 		this.children = new ArrayList<FSharpScope>();
 		if(parentScope != null){
 			this.path = parentScope.getInnerPath();
@@ -60,6 +62,7 @@ public class FSharpScope {
 		this.varList = new ArrayList<FSharpVar>();
 		this.funcList = new ArrayList<FSharpFunc>();
 		this.returnList = new ArrayList<ModifiableTree>();
+		this.instanceList = new ArrayList<FSharpVar>();
 		this.children = new ArrayList<FSharpScope>();
 		if(parentScope != null){
 			this.path = parentScope.getInnerPath();
@@ -160,6 +163,15 @@ public class FSharpScope {
 			}
 		}
 		return null;
+	}
+	
+	public void addMember(ModifiableTree node){
+		//TODO
+		if(node.is(JSTag.TAG_ASSIGN)){
+			
+		} else if(node.is(JSTag.TAG_VAR_DECL)){
+			
+		}
 	}
 	
 	public FSharpFunc searchFunc(String name){

@@ -10,6 +10,7 @@ public class FSharpFunc {
 	public String argsStr;
 	public boolean isMember = false;
 	public int uniqueKey = 0;
+	public FSharpScope scope;
 	ModifiableTree node;
 	
 	public FSharpFunc(String name){
@@ -27,7 +28,8 @@ public class FSharpFunc {
 		this.setArgsString();
 	}
 	public FSharpFunc(FSharpScope scope){
-		this.name = scope.getScopeName();
+		this.scope = scope;
+		this.name = scope.name;
 		this.fullname = scope.getFullname();
 		this.node = scope.node;
 		if(scope.parent.type == ScopeType.OBJECT){
@@ -37,6 +39,40 @@ public class FSharpFunc {
 		}
 		this.setArgsString();
 	}
+	public FSharpFunc(ModifiableTree node){
+		
+		this.isMember = false;
+		
+		ModifiableTree nameNode = null;
+		if(node.get(2).is(JSTag.TAG_NAME)){
+			nameNode = node.get(2);
+		} else {
+			ModifiableTree parentNode = node.getParent();
+			if(parentNode.is(JSTag.TAG_VAR_DECL)){
+				if(node.getParent().get(0).is(JSTag.TAG_NAME)){
+					nameNode = node.getParent().get(0);
+				}
+			} else if(parentNode.is(JSTag.TAG_ASSIGN)){
+				if(parentNode.get(0).is(JSTag.TAG_NAME)){
+					nameNode = parentNode.get(0);
+				} else if(parentNode.get(0).is(JSTag.TAG_FIELD)){
+					nameNode = parentNode.get(0).get(1);
+				}
+			} else if(parentNode.is(JSTag.TAG_PROPERTY)){
+				if(parentNode.get(0).is(JSTag.TAG_NAME)){
+					nameNode = parentNode.get(0);
+					this.isMember = true;
+				}
+			}
+		}
+		if(nameNode == null){
+			//lambda
+		}
+		this.name = nameNode.getText();
+		this.node = node;
+		this.setArgsString();
+	}
+	
 	
 	public String addChild(){
 		String name = this.name + this.uniqueKey;
