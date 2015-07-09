@@ -41,7 +41,14 @@ public class FSharpGenerator extends SourceGenerator {
 					if(parent.get(0).is(JSTag.TAG_NAME)){
 						newScope = new FSharpScope(parent.get(0).getText(), node, parentScope);
 					} else if(parent.get(0).is(JSTag.TAG_FIELD)){
-						newScope = new FSharpScope(parent.get(0).get(1).getText(), node, parentScope);
+						ArrayList<String> fields = getFieldElements(parent.get(0));
+						FSharpScope ownerClass = searchScopeByObjName(fields.get(1), parentScope);
+						if(ownerClass != null){
+							newScope = new FSharpScope(parent.get(0).get(1).getText(), node, ownerClass);
+							parentScope = ownerClass;
+						} else {
+							newScope = new FSharpScope(parent.get(0).get(1).getText(), node, parentScope);
+						}
 					}
 				}
 				// case: function is not lambda. function is named local name.
@@ -67,10 +74,10 @@ public class FSharpGenerator extends SourceGenerator {
 		ModifiableTree parent = node.getParent();
 
 		// case: object is not lambda.
-		if (parent.is(JSTag.TAG_ASSIGN) || parent.is(JSTag.TAG_PROPERTY)
-				|| parent.is(JSTag.TAG_VAR_DECL)) {
-			newScope = new FSharpScope(parent.get(0).getText(), node,
-					parentScope);
+		if (parent.is(JSTag.TAG_ASSIGN) || parent.is(JSTag.TAG_PROPERTY) || parent.is(JSTag.TAG_VAR_DECL)) {
+			if(parent.get(0).is(JSTag.TAG_NAME)){
+				newScope = new FSharpScope(parent.get(0).getText(), node, parentScope);
+			}
 		}
 		// case: object is lambda. example) arguments etc...
 		else {
@@ -114,25 +121,49 @@ public class FSharpGenerator extends SourceGenerator {
 		// TODO
 	}
 
-	private boolean findFieldAssignStmt(ModifiableTree node) {
-		findFieldAssignStmt(node, fsClasses.get(0));
-		return true;
+	private void findUndefinedVar() {
+		for(FSharpScope currentScope : this.fsClasses){
+			findUndefinedVar(currentScope.node, currentScope);
+		}
 	}
 	
-	private boolean findFieldAssignStmt(ModifiableTree node, FSharpScope currentScope) {
-		// case: object.property = value;
-		if (node.size() > 0) {
+	private void findUndefinedVar(ModifiableTree node, FSharpScope currentScope) {
+		if (node.is(JSTag.TAG_ASSIGN) && !node.get(1).is(JSTag.TAG_FUNC_DECL) && !node.get(1).is(JSTag.TAG_OBJECT)) {
 			ModifiableTree nameNode = node.get(0);
-			if (node.is(JSTag.TAG_ASSIGN) && nameNode.is(JSTag.TAG_FIELD)) {
+			if(nameNode.is(JSTag.TAG_NAME)){
+				if(currentScope.getAvailableVar(nameNode.getText()) == null){
+					currentScope.addUndefinedMember(node);
+				}
+			} else if(nameNode.is(JSTag.TAG_FIELD)){
 				ArrayList<String> fields = getFieldElements(nameNode);
-				FSharpScope ownerClass = searchScopeByObjName(fields.get(fields.size() - 2), currentScope);
-				ownerClass.addMember(node);
-				return true;
+				FSharpScope ownerClass = searchScopeByObjName(fields.get(1), currentScope);
+				if(ownerClass != null){
+					ownerClass.addUndefinedMember(node);
+				}
 			}
 		}
-		return true;
+		ModifiableTree nextNode;
+		if(node.size() > 0){
+			for(int i = 0; i < node.size(); i++){
+				nextNode = node.get(i);
+				if(!nextNode.is(JSTag.TAG_FUNC_DECL) && !nextNode.is(JSTag.TAG_OBJECT)){
+					findUndefinedVar(nextNode, currentScope);
+				}
+			}
+		}
 	}
 
+	private void findNewStmt(ModifiableTree node, FSharpScope currentScope) {
+		if(node.is(JSTag.TAG_NEW)){
+			ModifiableTree classNode = node.get(0);
+			if(classNode.is(JSTag.TAG_NAME)){
+				FSharpScope fsClass = searchScopeByObjName(classNode.getText(), currentScope);
+			} else if(classNode.is(JSTag.TAG_FIELD)){
+				
+			}
+		}
+	}
+	
 	private void formatField(ModifiableTree node, FSharpScope currentScope) {
 		ModifiableTree fieldNode = node;
 		FSharpScope classScope = null;
@@ -200,8 +231,15 @@ public class FSharpGenerator extends SourceGenerator {
 		FSharpScope result = null;
 		// search variable and function from current scope
 		for (FSharpVar instVar : currentScope.instanceList) {
-			if(instVar.getTrueName() == name){
+			if(instVar.getTrueName().contentEquals(name)){
 				result = currentScope;
+			}
+		}
+		for(FSharpScope fs : currentScope.children){
+			for (FSharpVar instVar : fs.instanceList) {
+				if(instVar.getTrueName().contentEquals(name)){
+					result = fs;
+				}
 			}
 		}
 		// search it from parent scope
@@ -246,7 +284,7 @@ public class FSharpGenerator extends SourceGenerator {
 		FSharpScope topScope = new FSharpScope("TOPLEVEL", node, null);
 		fsClasses.add(topScope);
 		findScope(node, topScope);
-		findFieldAssignStmt(node);
+		findUndefinedVar();
 		// print debug
 		for (FSharpScope fs : fsClasses) {
 			System.out.println(fs.toString());

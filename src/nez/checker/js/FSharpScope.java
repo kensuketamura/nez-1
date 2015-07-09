@@ -25,6 +25,7 @@ public class FSharpScope {
 	
 	public FSharpScope(String name){
 		this.name = name;
+		//this.instanceList.add(new FSharpVar(this.name, this.getInnerPath()));
 	}
 	
 	public FSharpScope(String name, ModifiableTree node, FSharpScope parentScope){
@@ -53,6 +54,7 @@ public class FSharpScope {
 				findProperty(node);
 			}
 		}
+		this.instanceList.add(new FSharpVar(this.name, this.getInnerPath()));
 	}
 	
 	public FSharpScope(String funcName, String localName, ModifiableTree node, FSharpScope parentScope){
@@ -81,6 +83,7 @@ public class FSharpScope {
 				findProperty(node);
 			}
 		}
+		this.instanceList.add(new FSharpVar(this.name, this.getInnerPath()));
 	}
 	
 	public String getScopeName(){
@@ -165,12 +168,16 @@ public class FSharpScope {
 		return null;
 	}
 	
-	public void addMember(ModifiableTree node){
-		//TODO
+	public void addUndefinedMember(ModifiableTree node){
 		if(node.is(JSTag.TAG_ASSIGN)){
-			
-		} else if(node.is(JSTag.TAG_VAR_DECL)){
-			
+			String name = null;
+			ModifiableTree nameNode = node.get(0);
+			if(nameNode.is(JSTag.TAG_FIELD)){
+				name = nameNode.get(1).getText();
+			} else if(nameNode.is(JSTag.TAG_NAME)){
+				name = nameNode.getText();
+			}
+			this.varList.add(new FSharpVar(name, this.getInnerPath()));
 		}
 	}
 	
