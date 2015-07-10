@@ -1,1 +1,7 @@
 /bin/
+nez.jar
+.DS_Store
+project
+classpath
+/sampleInput/
+/build/
