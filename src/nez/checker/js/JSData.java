@@ -2,12 +2,15 @@ package nez.checker.js;
 
 import java.util.ArrayList;
 
+import nez.checker.ModifiableTree;
+
 public class JSData {
 	protected ArrayList<JSData> children;
 	protected String name;
 	protected String fixedName;
 	protected ArrayList<JSData> path;
 	protected JSData parent;
+	protected ModifiableTree node;
 	
 	public String getOriginalName(){
 		return name;

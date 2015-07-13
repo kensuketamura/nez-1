@@ -1,5 +1,7 @@
 package nez.checker.js;
 
-public class JSObject extends JSData {
+import java.util.ArrayList;
 
+public class JSObject extends JSData {
+	private ArrayList<JSData> properties;
 }
