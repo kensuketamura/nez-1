@@ -152,14 +152,29 @@ public class FSharpGenerator extends SourceGenerator {
 			}
 		}
 	}
-
+	
+	private void findNewStmt(){
+		for(FSharpScope fs : this.fsClasses){
+			findNewStmt(fs.node, fs);
+		}
+	}
+	
 	private void findNewStmt(ModifiableTree node, FSharpScope currentScope) {
 		if(node.is(JSTag.TAG_NEW)){
 			ModifiableTree classNode = node.get(0);
 			if(classNode.is(JSTag.TAG_NAME)){
 				FSharpScope fsClass = searchScopeByObjName(classNode.getText(), currentScope);
+				FSharpVar fv = currentScope.getAvailableVar(classNode.getText());
+				if(fv != null){
+					fsClass.addInstance(fv);
+				}
 			} else if(classNode.is(JSTag.TAG_FIELD)){
-				
+				// can't add the instance to instanceList
+			}
+		}
+		if(node.size() > 0 && !node.is(JSTag.TAG_FUNC_DECL) && !node.is(JSTag.TAG_OBJECT)){
+			for(int i = 0; i < node.size(); i++){
+				findNewStmt(node.get(i), currentScope);
 			}
 		}
 	}
@@ -285,6 +300,7 @@ public class FSharpGenerator extends SourceGenerator {
 		fsClasses.add(topScope);
 		findScope(node, topScope);
 		findUndefinedVar();
+		findNewStmt();
 		// print debug
 		for (FSharpScope fs : fsClasses) {
 			System.out.println(fs.toString());

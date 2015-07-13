@@ -271,6 +271,10 @@ public class FSharpScope {
 		return this.children.add(child);
 	}
 	
+	public boolean addInstance(FSharpVar inst){
+		return this.instanceList.add(inst);
+	}
+	
 	public boolean remove(FSharpScope child){
 		return this.children.remove(child);
 	}
@@ -337,6 +341,7 @@ public class FSharpScope {
 		}
 		output.append("Var: " + varList.toString() + "\n");
 		output.append("Function: " + funcList.toString() + "\n");
+		output.append("Instance: " + instanceList.toString() + "\n");
 		//output.append(node.toString());
 		return output.toString();
 	}
