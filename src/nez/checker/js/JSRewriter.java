@@ -1,13 +1,31 @@
 package nez.checker.js;
 
+import java.util.ArrayList;
+
 import nez.checker.ModifiableTree;
 
 public class JSRewriter {
+	
+	private StringBuilder fixedSource;
+	private ArrayList<JSFunction> funs;
+	private ArrayList<JSObject> objs;
+	private ArrayList<JSVariable> vars;
+	private ArrayList<JSData> undecidedData;
+	
 	public JSRewriter() {
-		// TODO Auto-generated constructor stub
+		this.fixedSource = new StringBuilder();
+		this.funs = new ArrayList<JSFunction>();
+		this.objs = new ArrayList<JSObject>();
+		this.vars = new ArrayList<JSVariable>();
+		this.undecidedData = new ArrayList<JSData>();
 	}
 	
-
+	public String rewrite(ModifiableTree po) {
+		JSFunction top = new JSFunction("TOP", po);
+		this.find(po, top);
+		return fixedSource.toString();
+	}
+	
 	private void find(ModifiableTree node, JSData scope){
 		JSData nextScope = scope;
 		Boolean continueFind = true;
@@ -31,7 +49,26 @@ public class JSRewriter {
 
 	private JSFunction findFunction(ModifiableTree node, JSData scope){
 		JSFunction newFunction = null;
+		String name = "";
+		String localName = "";
 		//TODO
+		ModifiableTree parentNode = node.getParent();
+		if(parentNode.is(JSTag.TAG_ASSIGN)){
+			if(node.get(2).is(JSTag.TAG_NAME)){
+				localName = node.get(2).getText();
+			}
+			if(parentNode.get(0).is(JSTag.TAG_NAME)){
+				name = parentNode.get(0).getText();
+			} else if(parentNode.get(0).is(JSTag.TAG_FIELD)){
+				//TODO field
+				scope = scope.searchAvailableFunc(localName);
+				name = parentNode.get(0).get(1).getText();
+			}
+		}
+		if(node.get(2).is(JSTag.TAG_NAME)){
+			name = node.get(2).getText();
+		} else {}
+		JSFunction newFunc = new JSFunction(name, scope, node);
 		return newFunction;
 	}
 
@@ -52,4 +89,5 @@ public class JSRewriter {
 		//TODO
 		return newProperty;
 	}
+
 }

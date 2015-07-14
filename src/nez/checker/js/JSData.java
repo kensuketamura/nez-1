@@ -37,4 +37,17 @@ public class JSData {
 	public ArrayList<JSData> getPath(){
 		return (ArrayList<JSData>) this.path.clone();
 	}
+	
+	public JSData searchAvailableData(String name){
+		return null;
+	}
+	public JSFunction searchAvailableFunc(String name){
+		return null;
+	}
+	public JSObject searchAvailableObj(String name){
+		return null;
+	}
+	public JSVariable searchAvailableVar(String name){
+		return null;
+	}
 }

@@ -13,6 +13,8 @@ public class FSharpWriter extends ParsingWriter {
 	@Override
 	protected void write(ModifiableTree po) {
 		SourceGenerator generator = new FSharpGenerator();
+		JSRewriter rewriter = new JSRewriter();
+		String fixedSource = rewriter.rewrite(po);
 		generator.visit(po);
 		this.out.println(generator.toString());
 	}
