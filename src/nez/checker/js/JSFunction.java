@@ -9,6 +9,7 @@ public class JSFunction extends JSData {
 	private ArrayList<JSFunction> localFuncs;
 	private ArrayList<JSObject> localObjs;
 	private ArrayList<JSVariable> args;
+	public String localName;
 	
 	public JSFunction(String name, JSData parent, ModifiableTree node) {
 		this.name = name;
@@ -23,10 +24,9 @@ public class JSFunction extends JSData {
 		
 		ModifiableTree argsNode = node.get(4);
 		analyzeArgs(argsNode);
-		if(parent.getClass() == JSFunction.class){
-			this.init(name, (JSFunction)parent, node);
-		} else if(parent.getClass() == JSObject.class){
-			this.init(name, (JSObject)parent, node);
+		if(parent.getClass() == JSFunction.class || parent.getClass() == JSObject.class){
+			parent.addFunc(this);
+			this.fixedName = "FUN" + parent.issueLocalFuncIndentifier();
 		}
 	}
 	
@@ -39,16 +39,6 @@ public class JSFunction extends JSData {
 		this.localVars = new ArrayList<JSVariable>();
 		this.args = new ArrayList<JSVariable>();
 		this.parent = null;
-	}
-	
-	private void init(String name, JSFunction parent, ModifiableTree node){
-		parent.addFunc(this);
-		this.fixedName = "FUN" + parent.issueLocalFuncIndentifier();
-	}
-	
-	private void init(String name, JSObject parent, ModifiableTree node){
-		parent.addFunc(this);
-		this.fixedName = "FUN" + parent.issueLocalFuncIndentifier();
 	}
 	
 	private void analyzeArgs(ModifiableTree argsNode){

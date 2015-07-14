@@ -2,11 +2,29 @@ package nez.checker.js;
 
 import java.util.ArrayList;
 
+import nez.checker.ModifiableTree;
+
 public class JSObject extends JSData {
 	private ArrayList<JSData> properties;
 	private ArrayList<JSVariable> localVars;
 	private ArrayList<JSFunction> localFuncs;
 	private ArrayList<JSObject> localObjs;
+	
+	public JSObject(String name, JSData parent, ModifiableTree node){
+		this.name = name;
+		this.parent = parent;
+		this.node = node;
+		this.localFuncs = new ArrayList<JSFunction>();
+		this.localObjs = new ArrayList<JSObject>();
+		this.localVars = new ArrayList<JSVariable>();
+		ArrayList<JSData> path = parent.getPath();
+		path.add(parent);
+		this.path = path;
+		if(parent.getClass() == JSFunction.class || parent.getClass() == JSObject.class){
+			parent.addObj(this);
+			this.fixedName = "OBJ" + parent.issueLocalObjIndentifier();
+		}
+	}
 	
 	public Boolean addFunc(JSFunction jf){
 		return this.localFuncs.add(jf);

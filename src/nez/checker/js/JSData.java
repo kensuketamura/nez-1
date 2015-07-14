@@ -38,6 +38,28 @@ public class JSData {
 		return (ArrayList<JSData>) this.path.clone();
 	}
 	
+	public Boolean addFunc(JSFunction jf){
+		return false;
+	}
+	
+	public Boolean addVar(JSVariable jv){
+		return false;
+	}
+	
+	public Boolean addObj(JSObject jo){
+		return false;
+	}
+	
+	public String issueLocalFuncIndentifier(){
+		return null;
+	}
+	public String issueLocalVarIndentifier(){
+		return null;
+	}
+	public String issueLocalObjIndentifier(){
+		return null;
+	}
+	
 	public JSData searchAvailableData(String name){
 		return null;
 	}

@@ -12,6 +12,9 @@ public class FSharpWriter extends ParsingWriter {
 	
 	@Override
 	protected void write(ModifiableTree po) {
+		
+		NodeUtil.fillNullNode(po);
+		
 		SourceGenerator generator = new FSharpGenerator();
 		JSRewriter rewriter = new JSRewriter();
 		String fixedSource = rewriter.rewrite(po);
