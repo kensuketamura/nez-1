@@ -1,23 +1,21 @@
 package nez.checker.js;
 
-import java.util.ArrayList;
-
 import nez.checker.ModifiableTree;
 
 public class JSObject extends JSData {
-	private ArrayList<JSData> properties;
-	private ArrayList<JSVariable> localVars;
-	private ArrayList<JSFunction> localFuncs;
-	private ArrayList<JSObject> localObjs;
+	private PArrayList<JSData> properties;
+	private PArrayList<JSVariable> localVars;
+	private PArrayList<JSFunction> localFuncs;
+	private PArrayList<JSObject> localObjs;
 	
 	public JSObject(String name, JSData parent, ModifiableTree node){
 		this.name = name;
 		this.parent = parent;
 		this.node = node;
-		this.localFuncs = new ArrayList<JSFunction>();
-		this.localObjs = new ArrayList<JSObject>();
-		this.localVars = new ArrayList<JSVariable>();
-		ArrayList<JSData> path = parent.getPath();
+		this.localFuncs = new PArrayList<JSFunction>();
+		this.localObjs = new PArrayList<JSObject>();
+		this.localVars = new PArrayList<JSVariable>();
+		PArrayList<JSData> path = (PArrayList<JSData>)parent.getPath();
 		path.add(parent);
 		this.path = path;
 		if(parent.getClass() == JSFunction.class || parent.getClass() == JSObject.class){

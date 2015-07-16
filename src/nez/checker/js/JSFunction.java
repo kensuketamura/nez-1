@@ -1,24 +1,24 @@
 package nez.checker.js;
 
-import java.util.ArrayList;
-
 import nez.checker.ModifiableTree;
 
 public class JSFunction extends JSData {
-	private ArrayList<JSVariable> localVars;
-	private ArrayList<JSFunction> localFuncs;
-	private ArrayList<JSObject> localObjs;
-	private ArrayList<JSVariable> args;
+	private PArrayList<JSVariable> localVars;
+	private PArrayList<JSFunction> localFuncs;
+	private PArrayList<JSObject> localObjs;
+	private PArrayList<JSVariable> args;
 	public String localName;
+	public Boolean isConstructor = false;
 	
 	public JSFunction(String name, JSData parent, ModifiableTree node) {
 		this.name = name;
 		this.node = node;
-		this.localFuncs = new ArrayList<JSFunction>();
-		this.localObjs = new ArrayList<JSObject>();
-		this.localVars = new ArrayList<JSVariable>();
-		this.args = new ArrayList<JSVariable>();
-		ArrayList<JSData> path = parent.getPath();
+		this.parent = parent;
+		this.localFuncs = new PArrayList<JSFunction>();
+		this.localObjs = new PArrayList<JSObject>();
+		this.localVars = new PArrayList<JSVariable>();
+		this.args = new PArrayList<JSVariable>();
+		PArrayList<JSData> path = (PArrayList<JSData>)parent.getPath();
 		path.add(parent);
 		this.path = path;
 		
@@ -33,11 +33,12 @@ public class JSFunction extends JSData {
 	public JSFunction(String name, ModifiableTree node){
 		this.name = name;
 		this.node = node;
-		this.path = new ArrayList<JSData>();
-		this.localFuncs = new ArrayList<JSFunction>();
-		this.localObjs = new ArrayList<JSObject>();
-		this.localVars = new ArrayList<JSVariable>();
-		this.args = new ArrayList<JSVariable>();
+		this.fixedName = "TOP";
+		this.path = new PArrayList<JSData>();
+		this.localFuncs = new PArrayList<JSFunction>();
+		this.localObjs = new PArrayList<JSObject>();
+		this.localVars = new PArrayList<JSVariable>();
+		this.args = new PArrayList<JSVariable>();
 		this.parent = null;
 	}
 	
@@ -83,10 +84,13 @@ public class JSFunction extends JSData {
 		switch(type){
 		case FUNCTION:
 			num = this.localFuncs.size();
+			break;
 		case OBJECT:
 			num = this.localObjs.size();
+			break;
 		case VARIABLE:
 			num = this.localVars.size();
+			break;
 		}
 		if(num >= 100){
 			identifier = Integer.toString(num);
@@ -151,5 +155,14 @@ public class JSFunction extends JSData {
 			result = this.parent.searchAvailableVar(name);
 		}
 		return result;
+	}
+	
+	public String toString(){
+		StringBuilder out = new StringBuilder();
+		out.append("\nName     : " + this.name + "\n");
+		out.append("FixedName: " + this.getFixedFullName() + "\n");
+		out.append("Args     : " + this.args.toString() + "\n");
+		out.append("Path     : " + this.path.toString() + "\n");
+		return out.toString();
 	}
 }
