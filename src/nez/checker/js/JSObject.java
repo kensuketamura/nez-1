@@ -1,6 +1,7 @@
 package nez.checker.js;
 
 import nez.checker.ModifiableTree;
+import nez.checker.SourceBuilder;
 
 public class JSObject extends JSData {
 	private PArrayList<JSData> properties;
@@ -71,5 +72,14 @@ public class JSObject extends JSData {
 			identifier = "00" + Integer.toString(num);
 		}
 		return identifier;
+	}
+	
+	public void printVarDecl(SourceBuilder builder){
+		for(JSVariable var : this.localVars){
+			builder.appendNewLine("var " + var.getFixedFullName() + ";  //" + var.getPath().toString() + "::" + var.getOriginalName());
+		}
+		for(JSObject obj : this.localObjs){
+			builder.appendNewLine("var " + obj.getFixedFullName() + ";  //" + obj.getPath().toString() + "::" + obj.getOriginalName());
+		}
 	}
 }

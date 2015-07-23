@@ -17,8 +17,9 @@ public class FixedJSGenerator extends SourceGenerator {
 	}
 	
 	public void toSource(ModifiableTree node){
-		for(int i = 0; i < node.size(); i++){
-			this.visit(node.get(i));
+		for(JSFunction jf : this.funs){
+			jf.printVarDecl(currentBuilder);
 		}
 	}
+	
 }

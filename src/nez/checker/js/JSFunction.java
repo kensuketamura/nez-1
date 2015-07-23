@@ -1,6 +1,7 @@
 package nez.checker.js;
 
 import nez.checker.ModifiableTree;
+import nez.checker.SourceBuilder;
 
 public class JSFunction extends JSData {
 	private PArrayList<JSVariable> localVars;
@@ -155,6 +156,16 @@ public class JSFunction extends JSData {
 			result = this.parent.searchAvailableVar(name);
 		}
 		return result;
+	}
+	
+	public void printVarDecl(SourceBuilder builder){
+		for(JSVariable var : this.localVars){
+			builder.appendNewLine("var " + var.getFixedFullName() + ";  //" + var.getPath().toString() + "::" + var.getOriginalName());
+		}
+		for(JSObject obj : this.localObjs){
+			builder.appendNewLine("var " + obj.getFixedFullName() + ";  //" + obj.getPath().toString() + "::" + obj.getOriginalName());
+			obj.printVarDecl(builder);
+		}
 	}
 	
 	public String toString(){

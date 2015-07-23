@@ -144,11 +144,14 @@ public class JSRewriter {
 		String name = node.get(0).getText();
 		ModifiableTree valueNode = node.get(1);
 		if(valueNode.is(JSTag.TAG_FUNC_DECL)){
-			newProperty = findFunction(valueNode, scope);
+			newProperty = new JSFunction(name, scope, valueNode);
+			this.funs.add((JSFunction)newProperty);
 		} else if(valueNode.is(JSTag.TAG_OBJECT)){
-			newProperty = findObject(valueNode, scope);
+			newProperty = new JSObject(name, scope, node);
+			this.objs.add((JSObject)newProperty);
 		} else {
-			newProperty = findVariable(node, scope);
+			newProperty = new JSVariable(name, scope, valueNode);
+			this.vars.add((JSVariable)newProperty);
 		}
 		return newProperty;
 	}
