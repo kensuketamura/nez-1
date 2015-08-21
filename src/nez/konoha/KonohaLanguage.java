@@ -198,7 +198,7 @@ public class KonohaLanguage extends StringTransducerCombinator {
 		}
 		@Override
 		public void match(KonohaTransducer konoha, KonohaTree node) {
-			this.nextChoice = konoha.typeRuleMap.get(node.get(0).getText());
+			this.nextChoice = konoha.getRule(node.get(0).getText());
 		}
 	}
 	
@@ -249,6 +249,7 @@ public class KonohaLanguage extends StringTransducerCombinator {
 		@Override
 		public void match(KonohaTransducer konoha, KonohaTree node) {
 			KonohaTransducer funcLevel = new KonohaTransducer(ns);
+			funcLevel.setName(this.name, this.funcNode);
 			KonohaTree funcNode = this.funcNode.dup();
 			KonohaType[] types = setTypeVariable(konoha, node.get(1), funcLevel, funcNode.get(1));
 			appendTypeRule(node.textAt(0, ""), types);

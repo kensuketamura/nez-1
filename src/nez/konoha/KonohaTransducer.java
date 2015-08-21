@@ -93,6 +93,15 @@ public class KonohaTransducer {
 		return null;
 	}
 	
+	public final KonohaTypeRule getRule(String name){
+		KonohaTypeRule rule = null;
+		KonohaTransducer konoha = this;
+		while(rule == null && konoha != null){
+			rule = konoha.typeRuleMap.get(name);
+			konoha = konoha.parent;
+		}
+		return rule;
+	}
 	
 	public final void setType(String name, KonohaType t) {
 		if(this.typeMap == null) {

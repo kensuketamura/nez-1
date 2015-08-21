@@ -2,7 +2,7 @@
  * Konoha Grammar of Sample Version
  *
  * Konoha is a statically typed scripting language
- * 
+ *
  * [1] https://docs.oracle.com/javase/specs/jls/se8/html/jls-2.html#jls-2.4
  *
  * Authors:
@@ -111,8 +111,9 @@ EOT = !.
 "while"        = 'while'        !W _
 
 KEYWORD
-	= "true" / "false" / "null" / "return" / "var" / "func"
-	
+	= "true" / "false" / "null" / "return" / "var" / "func" / "if" / "then" / "else"
+	/ "while"
+
 /* Identifier */
 
 format #Name[0] `${text}`
@@ -156,9 +157,9 @@ MetaDecl
 	= { "meta" @Name @FuncType "=" @Formatter (@Requirements)? #MetaDecl }
 
 Formatter
-   = '`' { #List (!('`') @('${' Identifier '}' 
-       / '$[' _ Index _ ({@  @Formatter _ @Index _ #Format })? ']' 
-       / { ( '$$' `$` / '\\`' `\`` 
+   = '`' { #List (!('`') @('${' Identifier '}'
+       / '$[' _ Index _ ({@  @Formatter _ @Index _ #Format })? ']'
+       / { ( '$$' `$` / '\\`' `\``
        / (!('$$' / '${' / '$[' / '\\`' / '`') .)+ ) }))* } '`'
 
 Index
@@ -170,7 +171,7 @@ Requirements
 /* TypeDecl */
 
 example TypeDecl '''
-type name = 
+type name =
 	naruto: string
 	age: int
 '''
@@ -214,7 +215,7 @@ public Type
 
 ArrayType
 	= (ObjectType ) {@ "[" "]" #Tarray }?
-	
+
 ObjectType
 	= Identifier /* QualifiedName */
 
@@ -279,7 +280,7 @@ func f a b =
 FuncDecl
 	= { "func" @Identifier @FuncParam "=" (@Block / @Expression) #FuncDecl }
 
-FuncParam 
+FuncParam
 	= { (@Identifier)* #FuncParam }
 
 Block
@@ -332,7 +333,7 @@ format #List[*] `($[0 `, ` -1])`
 public Expression
 	= AssignmentExpression
 	/ LogicalOrExpression
-	
+
 AssignmentExpression
 	= { @UnaryExpression "=" @Expression #Assign }
 
@@ -414,11 +415,11 @@ format #String[0]    `"${text}"`
 format #Character[0] `'${text}'`
 
 Literal
-	= FloatingPointLiteral 
-	/ IntegerLiteral 
-	/ BooleanLiteral 
-	/ CharacterLiteral 
-	/ StringLiteral 
+	= FloatingPointLiteral
+	/ IntegerLiteral
+	/ BooleanLiteral
+	/ CharacterLiteral
+	/ StringLiteral
 	/ NullLiteral
 
 Constant
@@ -506,4 +507,3 @@ HEX_ESCAPE
 
 HEX4
 	= HEX HEX HEX HEX
-
