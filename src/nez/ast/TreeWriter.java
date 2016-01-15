@@ -157,6 +157,32 @@ public class TreeWriter extends FileBuilder {
 		this.writeNewLine();
 	}
 
+	public void writeVmjsJSON(Tree<?> node, Symbol label) {
+		this.write("{");
+		this.write("\"tag\":");
+		this.write(StringUtils.quoteString('"', node.getTag().toString(), '"'));
+		this.write(",\"label\":");
+		if (label != null) {
+			this.write(StringUtils.quoteString('"', label.toString(), '"'));
+		} else {
+			this.write(StringUtils.quoteString('"', "null", '"'));
+		}
+		this.write(",\"value\":");
+		if (node.size() == 0) {
+			this.write(StringUtils.quoteString('"', node.toText(), '"'));
+		} else {
+			this.write("[");
+			for (int i = 0; i < node.size(); i++) {
+				this.writeVmjsJSON(node.get(i), node.getLabel(i));
+				if (i < node.size() - 1) {
+					this.write(",");
+				}
+			}
+			this.write("]");
+		}
+		this.write("}");
+	}
+
 	private void countTag(Tree<?> node, TreeMap<String, Integer> m) {
 		for (int i = 0; i < node.size(); i++) {
 			countTag(node.get(i), m);
