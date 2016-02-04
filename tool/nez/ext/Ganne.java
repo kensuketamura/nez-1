@@ -7,8 +7,10 @@ import nez.Parser;
 import nez.Strategy;
 import nez.ast.Symbol;
 import nez.ast.Tree;
+import nez.infer.InferenceEngine;
 import nez.lang.Expression;
 import nez.lang.GrammarFileLoader;
+import nez.lang.Production;
 import nez.lang.expr.ExpressionCommons;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
@@ -16,6 +18,7 @@ import nez.util.UList;
 public class Ganne extends GrammarFileLoader {
 	public Ganne() {
 		init(Ganne.class, new Undefined());
+		infer = new InferenceEngine();
 	}
 
 	public class Undefined extends DefaultVisitor {
@@ -28,6 +31,7 @@ public class Ganne extends GrammarFileLoader {
 	}
 
 	static Parser anneParser;
+	static InferenceEngine infer;
 
 	@Override
 	public Parser getLoaderParser(String start) {
@@ -57,13 +61,18 @@ public class Ganne extends GrammarFileLoader {
 		for (Tree<?> nonterminal : node) {
 			visit(nonterminal);
 		}
-		getGrammar().dump();
+		// getGrammar().dump();
 	}
 
 	private final void loadPredefinedProduction() {
 		GrammarFileLoader fl = new Gnez();
 		try {
-			fl.load(getGrammar(), "log_pre3.nez", Strategy.newSafeStrategy());
+			Grammar infergGrammar = GrammarFileLoader.loadGrammarFile("log_pre3.nez", Strategy.newSafeStrategy());
+			for (Production production : infergGrammar.getProductionList()) {
+				getGrammar().addProduction(production);
+			}
+			// fl.load(getGrammar(), "log_pre3.nez",
+			// Strategy.newSafeStrategy());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -95,11 +104,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -111,11 +118,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -127,11 +132,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -143,11 +146,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -159,11 +160,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -175,11 +174,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -191,11 +188,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -207,11 +202,10 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
+
 		}
 	}
 
@@ -223,11 +217,9 @@ public class Ganne extends GrammarFileLoader {
 			for (Tree<?> content : node.get(_Content)) {
 				l.add(visit(content));
 			}
-			// Expression inner = ExpressionCommons.newPsequence(null, l);
-			// getGrammarFile().addProduction(null, localName, inner);
-			// return ExpressionCommons.newNonTerminal(null, getGrammar(),
-			// localName);
-			return ExpressionCommons.newString(null, localName);
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return ExpressionCommons.newNonTerminal(null, getGrammar(), localName);
 		}
 	}
 
@@ -242,8 +234,19 @@ public class Ganne extends GrammarFileLoader {
 	public class _Token extends Undefined {
 		@Override
 		public Expression toExpression(Tree<?> node) {
-			Expression inner = ExpressionCommons.newString(null, node.toText());
-			return inner;
+			try {
+				Grammar g = infer.inferString(node.toText());
+				for (Production production : g.getProductionList()) {
+					getGrammar().addProduction(production);
+				}
+				Expression inner = ExpressionCommons.newNonTerminal(node, g, g.getProductionList().get(0).getLocalName());
+				return inner;
+
+			} catch (IOException e) {
+				// TODO é©ìÆê∂ê¨Ç≥ÇÍÇΩ catch ÉuÉçÉbÉN
+				e.printStackTrace();
+			}
+			return null;
 		}
 	}
 

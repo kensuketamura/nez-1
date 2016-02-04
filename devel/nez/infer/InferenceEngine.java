@@ -14,6 +14,7 @@ public class InferenceEngine {
 	private final double maxMass;
 	private final double minCoverage;
 	private final double clusterTolerance;
+	private int i = 1;
 
 	public InferenceEngine() {
 		this.maxMass = 0.01;
@@ -34,6 +35,22 @@ public class InferenceEngine {
 		Strategy strategy = Strategy.newSafeStrategy();
 		Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez", strategy);
 		SourceContext sc = SourceContext.newFileContext(filePath);
+		return g.newParser(strategy).parseCommonTree(sc);
+	}
+
+	public Grammar inferString(String str) throws IOException {
+		Tree<?> tokenTree = tokenizeString(str);
+		// System.out.println(tokenTree.toString());
+		StructureType schema = this.discoverStructure(tokenTree);
+		Grammar infered = this.generateGrammar(schema);
+		infered.dump();
+		return infered;
+	}
+
+	public Tree<?> tokenizeString(String str) throws IOException {
+		Strategy strategy = Strategy.newSafeStrategy();
+		Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez", strategy);
+		SourceContext sc = SourceContext.newStringContext(str);
 		return g.newParser(strategy).parseCommonTree(sc);
 	}
 
@@ -123,7 +140,8 @@ public class InferenceEngine {
 
 	public Grammar generateGrammar(StructureType inferedStructure) {
 		Grammar inferedGrammar = new Grammar();
-		inferedGrammar.newProduction("Generated", inferedStructure.getExpression(inferedGrammar));
+		inferedGrammar.newProduction("Generated" + i, inferedStructure.getExpression(inferedGrammar));
+		i++;
 		return inferedGrammar;
 	}
 
