@@ -61,7 +61,7 @@ public class Ganne extends GrammarFileLoader {
 		for (Tree<?> nonterminal : node) {
 			visit(nonterminal);
 		}
-		// getGrammar().dump();
+		getGrammar().dump();
 	}
 
 	private final void loadPredefinedProduction() {
@@ -235,11 +235,22 @@ public class Ganne extends GrammarFileLoader {
 		@Override
 		public Expression toExpression(Tree<?> node) {
 			try {
-				Grammar g = infer.inferString(node.toText());
-				for (Production production : g.getProductionList()) {
+				Grammar inferGrammar = infer.inferString(node.toText());
+				Grammar preGrammar = GrammarFileLoader.loadGrammarFile("log_pre3.nez", Strategy.newSafeStrategy());
+				for (Production production : inferGrammar.getProductionList()) {
 					getGrammar().addProduction(production);
 				}
-				Expression inner = ExpressionCommons.newNonTerminal(node, g, g.getProductionList().get(0).getLocalName());
+				Expression inferExpression = inferGrammar.get(0).getExpression();
+				String inferString = inferGrammar.getProductionList().get(0).getLocalName();
+				for (int i = 0; i < preGrammar.size(); i++) {
+					String preString = preGrammar.getProductionList().get(i).getLocalName();
+					if (inferExpression.toString().equals(preString)) {
+						inferGrammar = preGrammar;
+						break;
+					}
+				}
+
+				Expression inner = ExpressionCommons.newNonTerminal(node, inferGrammar, inferString);
 				return inner;
 
 			} catch (IOException e) {

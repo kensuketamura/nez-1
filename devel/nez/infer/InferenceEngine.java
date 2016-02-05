@@ -27,7 +27,7 @@ public class InferenceEngine {
 		// System.out.println(tokenTree.toString());
 		StructureType schema = this.discoverStructure(tokenTree);
 		Grammar infered = this.generateGrammar(schema);
-		infered.dump();
+		// infered.dump();
 		return infered;
 	}
 
@@ -43,7 +43,7 @@ public class InferenceEngine {
 		// System.out.println(tokenTree.toString());
 		StructureType schema = this.discoverStructure(tokenTree);
 		Grammar infered = this.generateGrammar(schema);
-		infered.dump();
+		// infered.dump();
 		return infered;
 	}
 

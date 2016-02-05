@@ -91,8 +91,7 @@ public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Und
 	public class SimpleToken extends Undefined {
 		@Override
 		public void accept(Tree<?> node, TokenSequence seq) {
-			// String label = node.getTag().toString();
-			String label = node.toText();
+			String label = node.getTag().toString();
 			seq.transaction(label, new Token(label, totalNumOfChunk));
 		}
 	}
@@ -111,10 +110,6 @@ public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Und
 
 	public class IPv4 extends SimpleToken {
 	}
-
-	// public class IP extends SimpleToken {
-	//
-	// }
 
 	public class Email extends SimpleToken {
 	}

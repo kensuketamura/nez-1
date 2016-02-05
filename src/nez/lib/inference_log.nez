@@ -27,7 +27,8 @@ CloseParenthesis	= { CLOSE #CloseParen}
 
 PrimaryTypedToken	= Number
 					/ String
-Number	= { '-'? INT (FRAC EXP? #Float / '' #Integer) }
+//Number	= { '-'? INT (FRAC EXP? #Float / '' #Integer) }
+Number	= { '-'? '+'? DIGIT+ (FRAC EXP? #Float / '' #Integer) }
 String	= { ( !OPEN !CLOSE !DELIM ![\r\n ] . )+ #String}
 
 BuiltInTypedToken	= IPAddress
