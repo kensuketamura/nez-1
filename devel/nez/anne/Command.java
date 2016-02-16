@@ -1,11 +1,10 @@
-package nez.main;
+package nez.anne;
 
 import java.io.IOException;
 
-import nez.anne.AnneGrammarGenerator;
 import nez.ast.Source;
 
-public class Canne extends Command {
+public class Command extends nez.main.Command {
 	@Override
 	public void exec() throws IOException {
 		checkInputSource();

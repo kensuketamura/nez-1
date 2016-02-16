@@ -1,9 +1,15 @@
 package nez.infer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import nez.ParserGenerator;
+import nez.ast.Source;
 import nez.ast.Tree;
+import nez.lang.Grammar;
+import nez.parser.ParserStrategy;
+import nez.parser.io.StringSource;
 
 public class InferenceEngine {
 	private final double maxMass;
@@ -16,21 +22,22 @@ public class InferenceEngine {
 		this.clusterTolerance = 0.01;
 	}
 
-	// public Grammar infer(String filePath) throws IOException {
-	// Tree<?> tokenTree = tokenize(filePath);
-	// StructureType schema = this.discoverStructure(tokenTree);
-	// Grammar infered = this.generateGrammar(schema);
-	// infered.dump();
-	// return infered;
-	// }
+	public Grammar infer(String context) throws IOException {
+		Tree<?> tokenTree = tokenize(context);
+		StructureType schema = this.discoverStructure(tokenTree);
+		// Grammar infered = this.generateGrammar(schema);
+		// TODO
+		Grammar infered = new Grammar();
+		infered.dump();
+		return infered;
+	}
 
-	// public Tree<?> tokenize(String filePath) throws IOException {
-	// ParserStrategy strategy = ParserStrategy.newSafeStrategy();
-	// Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez",
-	// strategy);
-	// SourceContext sc = SourceContext.newFileContext(filePath);
-	// return g.newParser(strategy).parseCommonTree(sc);
-	// }
+	public Tree<?> tokenize(String context) throws IOException {
+		ParserStrategy strategy = ParserStrategy.newSafeStrategy();
+		ParserGenerator pg = new ParserGenerator();
+		Source ss = new StringSource(context);
+		return pg.newParser("inference_log.nez", strategy).parse(ss);
+	}
 
 	private final StructureType discoverStructure(Tree<?> tokenTree) {
 
