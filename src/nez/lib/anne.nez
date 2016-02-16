@@ -1,0 +1,72 @@
+TopLevel = { $(Nonterminal)+ #List}
+Nonterminal = {"{" $name(Name) ":" $content(ContentList) "}" #Nonterminal} _
+Preamble = { "{" $name(Name) "<" ":" $content(ContentList) "}" #Preamble} _
+Annotation = { "{" $name(Name) ">" ":" $content(ContentList) "}" #Annotation} _
+
+Name = {[A-Za-z0-9]* #Name} _
+ContentList = {$(Content)+ #List}
+Content = Nonterminal _
+        / Preamble _
+        / Annotation _
+        / Alternative _
+        / Repetition _
+        / Option _
+        / Constant _
+        / Enumeration _
+        / Table _
+        / Assertion _
+        / Token _
+        / { (!KEYWORD .)+ #Token}
+
+
+
+Alternative = { "{" $name(Name) "/" $name(Name) ":" $content(ContentList)"}" #Alternative} _
+Repetition = { "{" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition} _
+           / { "{" $name(Name) "/" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition} _
+Option = { "{" $name(Name) "?" ":" $content(ContentList)"}" #Option} _
+Constant = { "{" $name(Name) "=" ":" $content(ContentList)"}" #Constant} _
+Enumeration = { "{" $name(Name) "/" "/" $name(Name)">" ":" $content(ContentList)"}" #Enumeration} _
+Table = { "{" $name(Name) "#" ":" $content(ContentList) "}" #Table} _
+      / { "{" $name(Name) "#" "h" ":" $content(ContentList) "}" #Table} _
+Assertion ={ "{" $name(Name) "!" ":" $content(ContentList) "}" #Assertion} _
+Token = { TOKEN  #Delim}
+TOKEN = [ -"'\[\]]
+KEYWORD = TOKEN / [{}]
+_ = S*
+S = [ \t\n\r]
+W = [a-zA-Z0-9_$]
+":" = ':' _
+"{" = '{' _
+"}" = '}' _
+">" = '>' _
+"<" = '<' _
+"[" = '[' _
+"|" = '|' _
+"]" = ']' _
+"=" = '=' _
+"#" = '#' _
+"h" = 'h' _
+"*" = '*' _
+"!" = '!' _
+"/" = '/' _
+"?" = '?' _
+";" = ';' _
+
+
+example Nonterminal'''
+{Record: hoge}
+'''
+
+example TopLevel'''
+{Record:{IP<:207.136.97.49} - -[{Data<:15/Oct/1997}
+{Time<:18:46:51 -0700}] " {Message>:GET/turkey/amnty1.gif HTTP/1.0}"200 {Size/S:3013}}
+'''
+/*
+example Option'''
+{Parens?:( {Parens!: ((())) } ) }
+'''
+
+example Nonterminal'''
+{NewRecord: {Record/NewElem*[|]: 912571| {NewElem: {Elem:912571} | } 1||0||0||0||0|...| } {Elem!:0} }
+'''
+*/

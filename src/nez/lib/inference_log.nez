@@ -1,0 +1,116 @@
+/*
+  Grammar for generic log data, which can be used for the structure inference.
+  Author:
+    Shinya Yamaguchi (https://github.com/yshinya6)
+*/
+
+File	= { $(Line)* #List }
+
+Line	= { $(Token)+ (NEWLINE / !.) #Chunk }
+
+Token	= MetaToken
+		/ SimpleTokenSequence
+
+SimpleTokenSequence	= {  ( $(SimpleToken) / $(Delim)  )+ #Sequence}
+
+Delim	= { DELIM* #Delim}
+
+DELIM	= [ ,:;\-|_]
+
+SimpleToken	= BuiltInTypedToken
+			/ PrimaryTypedToken
+
+MetaToken	= { $open(OpenParenthesis) $value(SimpleToken)? $close(CloseParenthesis)  #MetaToken}
+OpenParenthesis		= { OPEN #OpenParen}
+CloseParenthesis	= { CLOSE #CloseParen}
+
+
+PrimaryTypedToken	= Number
+					/ String
+//Number	= { '-'? INT (FRAC EXP? #Float / '' #Integer) }
+Number	= { '-'? '+'? DIGIT+ (FRAC EXP? #Float / '' #Integer) }
+String	= { ( !OPEN !CLOSE !DELIM ![\r\n ] . )+ #String}
+
+BuiltInTypedToken	= IPAddress
+					/ EmailAddress
+//					/ URLs
+					/ Path
+					/ Date
+					/ Time
+
+IPAddress			= IPv6
+					/ IPv4
+IPv6				= { ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 #IPv6 }
+IPv4				= { ADDV4 '.' ADDV4 '.' ADDV4 '.' ADDV4 #IPv4}
+EmailAddress		= { EMAIL #Email }
+//URLs				= { SCHEMA ':' HIERALCHY ('?' QUERY)? ('#' QUERY)? }
+Path				= { PATH #Path}
+Date	= { DOW? S MONTH S DAY #Date}
+        / { DAY '/' MONTH '/' YEAR #Date}
+Time	= { DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT #Time}
+
+
+//For MetaToken
+OPEN	= ['"\[{(<]
+CLOSE	= ['"\]})>]
+
+//For IPAddress
+ADDV4	= DIGIT DIGIT? DIGIT?
+ADDV6	= HEXDIGIT HEXDIGIT? HEXDIGIT? HEXDIGIT?
+EMAIL		= LOCAL '@' DOMAIN
+LOCAL		= ([A-Za-z0-9] / '-')+ ('.' LOCAL)?
+DOMAIN		= SUBDOMAIN ('.' SUBDOMAIN)+
+SUBDOMAIN	= ([A-Za-z0-9] / '-')+
+
+//For URL
+HIERALCHY			= '//' AUTHORITY PATH
+AUTHORITY			= ( CHAR* '@')? CHAR+ (':' DIGIT* )
+PATH				= ('/' CHAR*)+
+QUERY				= (CHAR / [/?])*
+CHAR				= [a-zA-Z] / DIGIT / [-._~] / '%' HEXDIGIT HEXDIGIT / [!$&'"()*+,;=:@]
+DOW		= 'Sun' / 'sun' / 'Mon' / 'mon' / 'Tue' / 'tue' / 'Wed' / 'wed' / 'Thu' / 'thu' / 'Fri' / 'fri' / 'Sat' / 'sat'
+MONTH	= 'Jun' / 'Feb' / 'Mar' / 'Apl' / 'May' / 'June' / 'July' / 'Aug' / 'Sep' / 'Oct' / 'Nov' / 'Dec'
+DAY		= [1-3] [0-9] / [1-9]
+YEAR    = [1-2] [0-9] [0-9] [0-9]
+
+// For Primary Type
+INT		= '0'
+		/ [1-9] DIGIT*
+DIGIT	= [0-9]
+FRAC	= '.' DIGIT+
+EXP		= [Ee] ( '-' / '+' )? DIGIT+
+HEXDIGIT	= [a-fA-F0-9]
+
+//Layout
+NEWLINE	= '\r\n'
+		/ '\n'
+S		= [ \t]
+
+example File '''
+Sat Jun 24 06:38:46 2006
+
+'''
+example File '''
+Sat Jun 24 06:38:46 2006
+Sun Feb 25 07:49:57 2007
+'''
+example Line '''
+Sat Jun 24 06:38:46 2006 crashdump(2164):
+'''
+example File '''
+Sat Jun 24 06:38:46 2006 crashdump[2164]: Started writing crash report to: /Logs/Crash/Exit/pro.crash.log
+
+'''
+
+example File '''
+- crashreporterd[120]: mach_msg()
+
+'''
+
+example File '''
+- crashreporterd[120]: mach_msg() reply failed: (ipc/send) invalid destination port
+
+'''
+
+example MetaToken (123)
+
