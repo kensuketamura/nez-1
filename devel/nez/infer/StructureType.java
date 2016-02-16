@@ -2,9 +2,9 @@ package nez.infer;
 
 import java.util.List;
 
-import nez.Grammar;
 import nez.lang.Expression;
-import nez.lang.expr.ExpressionCommons;
+import nez.lang.Expressions;
+import nez.lang.Grammar;
 import nez.util.UList;
 
 public abstract class StructureType {
@@ -67,7 +67,7 @@ class Struct extends StructureType {
 		for (StructureType element : inner) {
 			l.add(element.getExpression(g));
 		}
-		return ExpressionCommons.newPsequence(null, l);
+		return Expressions.newSequence(l);
 	}
 }
 
@@ -97,7 +97,7 @@ class Sequence extends StructureType {
 				l[index] = element.getExpression(g);
 			}
 		}
-		return g.newSequence(l);
+		return Expressions.newSequence(l);
 	}
 }
 
@@ -121,14 +121,14 @@ class Choice extends StructureType {
 
 	@Override
 	public Expression getExpression(Grammar g) {
-		Expression[] l = new Expression[this.maxTokenCount];
+		UList<Expression> l = new UList<Expression>(new Expression[this.maxTokenCount]);
 
 		for (Token element : tokenList) {
 			for (int index : element.getHistogram().getOrderIdList()) {
-				l[index] = element.getExpression(g);
+				l.add(index, element.getExpression(g));
 			}
 		}
-		return g.newChoice(l);
+		return Expressions.newChoice(l);
 	}
 }
 
@@ -153,7 +153,7 @@ class Union extends Struct {
 		for (StructureType element : inner) {
 			l.add(element.getExpression(g));
 		}
-		return ExpressionCommons.newPchoice(null, l);
+		return Expressions.newChoice(l);
 	}
 
 }

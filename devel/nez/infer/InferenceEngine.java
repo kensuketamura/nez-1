@@ -1,20 +1,14 @@
 package nez.infer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import nez.Grammar;
-import nez.Strategy;
 import nez.ast.Tree;
-import nez.io.SourceContext;
-import nez.lang.GrammarFileLoader;
 
 public class InferenceEngine {
 	private final double maxMass;
 	private final double minCoverage;
 	private final double clusterTolerance;
-	private int i = 1;
 
 	public InferenceEngine() {
 		this.maxMass = 0.01;
@@ -22,37 +16,21 @@ public class InferenceEngine {
 		this.clusterTolerance = 0.01;
 	}
 
-	public Grammar infer(String filePath) throws IOException {
-		Tree<?> tokenTree = tokenize(filePath);
-		// System.out.println(tokenTree.toString());
-		StructureType schema = this.discoverStructure(tokenTree);
-		Grammar infered = this.generateGrammar(schema);
-		// infered.dump();
-		return infered;
-	}
+	// public Grammar infer(String filePath) throws IOException {
+	// Tree<?> tokenTree = tokenize(filePath);
+	// StructureType schema = this.discoverStructure(tokenTree);
+	// Grammar infered = this.generateGrammar(schema);
+	// infered.dump();
+	// return infered;
+	// }
 
-	public Tree<?> tokenize(String filePath) throws IOException {
-		Strategy strategy = Strategy.newSafeStrategy();
-		Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez", strategy);
-		SourceContext sc = SourceContext.newFileContext(filePath);
-		return g.newParser(strategy).parseCommonTree(sc);
-	}
-
-	public Grammar inferString(String str) throws IOException {
-		Tree<?> tokenTree = tokenizeString(str);
-		// System.out.println(tokenTree.toString());
-		StructureType schema = this.discoverStructure(tokenTree);
-		Grammar infered = this.generateGrammar(schema);
-		// infered.dump();
-		return infered;
-	}
-
-	public Tree<?> tokenizeString(String str) throws IOException {
-		Strategy strategy = Strategy.newSafeStrategy();
-		Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez", strategy);
-		SourceContext sc = SourceContext.newStringContext(str);
-		return g.newParser(strategy).parseCommonTree(sc);
-	}
+	// public Tree<?> tokenize(String filePath) throws IOException {
+	// ParserStrategy strategy = ParserStrategy.newSafeStrategy();
+	// Grammar g = GrammarFileLoader.loadGrammar("inference_log.nez",
+	// strategy);
+	// SourceContext sc = SourceContext.newFileContext(filePath);
+	// return g.newParser(strategy).parseCommonTree(sc);
+	// }
 
 	private final StructureType discoverStructure(Tree<?> tokenTree) {
 
@@ -138,19 +116,19 @@ public class InferenceEngine {
 		return minToken;
 	}
 
-	public Grammar generateGrammar(StructureType inferedStructure) {
-		Grammar inferedGrammar = new Grammar();
-		inferedGrammar.newProduction("Generated" + i, inferedStructure.getExpression(inferedGrammar));
-		i++;
-		return inferedGrammar;
-	}
+	// public Grammar generateGrammar(StructureType inferedStructure) {
+	// Grammar inferedGrammar = new Grammar();
+	// inferedGrammar.newProduction("Generated",
+	// inferedStructure.getExpression(inferedGrammar));
+	// return inferedGrammar;
+	// }
 
-	public static void main(String[] args) {
-		InferenceEngine eng = new InferenceEngine();
-		try {
-			eng.infer(args[0]);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+	// public static void main(String[] args) {
+	// InferenceEngine eng = new InferenceEngine();
+	// try {
+	// eng.infer(args[0]);
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// }
 }

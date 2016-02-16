@@ -1,9 +1,9 @@
 package nez.infer;
 
-import nez.Grammar;
 import nez.ast.Tree;
 import nez.lang.Expression;
-import nez.lang.expr.ExpressionCommons;
+import nez.lang.Expressions;
+import nez.lang.Grammar;
 import nez.util.UList;
 
 public class Token implements InferenceTokenSymbol {
@@ -25,7 +25,7 @@ public class Token implements InferenceTokenSymbol {
 	}
 
 	public Expression getExpression(Grammar g) {
-		return ExpressionCommons.newNonTerminal(null, g, this.label);
+		return Expressions.newNonTerminal(null, g, this.label);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class DelimToken extends Token {
 
 	@Override
 	public Expression getExpression(Grammar g) {
-		return ExpressionCommons.newString(null, this.label);
+		return Expressions.newExpression(null, this.label);
 	}
 
 	@Override
@@ -68,9 +68,9 @@ class MetaToken extends Token {
 	// assume that there is no nested MetaToken
 	public Expression getExpression(Tree<?> node, Grammar g) {
 		UList<Expression> l = new UList<Expression>(new Expression[3]);
-		l.add(ExpressionCommons.newString(null, node.getText(_open, "")));
-		l.add(ExpressionCommons.newNonTerminal(null, g, node.get(_value).getTag().toString()));
-		l.add(ExpressionCommons.newString(null, node.getText(_close, "")));
-		return ExpressionCommons.newPsequence(null, l);
+		l.add(Expressions.newExpression(null, node.getText(_open, "")));
+		l.add(Expressions.newNonTerminal(null, g, node.get(_value).getTag().toString()));
+		l.add(Expressions.newExpression(null, node.getText(_close, "")));
+		return Expressions.newSequence(l);
 	}
 }
