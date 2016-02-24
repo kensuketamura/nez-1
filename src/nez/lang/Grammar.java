@@ -90,6 +90,19 @@ public class Grammar extends AbstractList<Production> {
 		return null;
 	}
 
+	public final Production setStartProduction(String name) {
+		Production start = getProduction(name);
+		UList<Production> fixedList = new UList<>(new Production[prodList.size()]);
+		fixedList.add(start);
+		for (Production p : prodList) {
+			if (p != start) {
+				fixedList.add(p);
+			}
+		}
+		this.prodList = fixedList;
+		return start;
+	}
+
 	public final Production addProduction(SourceLocation s, String name, Expression e) {
 		Production p = new Production(s, this, name, e);
 		addProduction(p);

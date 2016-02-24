@@ -1,56 +1,56 @@
 TopLevel = { $(Nonterminal)+ #List}
-Nonterminal = {"{" $name(Name) ":" $content(ContentList) "}" #Nonterminal} _
-Preamble = { "{" $name(Name) "<" ":" $content(ContentList) "}" #Preamble} _
-Annotation = { "{" $name(Name) ">" ":" $content(ContentList) "}" #Annotation} _
+Nonterminal = {"{" $name(Name) ":" $content(ContentList) "}" #Nonterminal}
+Preamble = { "{" $name(Name) "<" ":" $content(ContentList) "}" #Preamble}
+Annotation = { "{" $name(Name) ">" ":" $content(ContentList) "}" #Annotation}
 
 Name = {[A-Za-z0-9]* #Name} _
 ContentList = {$(Content)+ #List}
-Content = Nonterminal _
-        / Preamble _
-        / Annotation _
-        / Alternative _
-        / Repetition _
-        / Option _
-        / Constant _
-        / Enumeration _
-        / Table _
-        / Assertion _
-        / Token _
+Content = Nonterminal
+        / Preamble
+        / Annotation
+        / Alternative
+        / Repetition
+        / Option
+        / Constant
+        / Enumeration
+        / Table
+        / Assertion
+        /*/ Token*/
         / { (!KEYWORD .)+ #Token}
 
 
 
-Alternative = { "{" $name(Name) "/" $name(Name) ":" $content(ContentList)"}" #Alternative} _
-Repetition = { "{" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition} _
-           / { "{" $name(Name) "/" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition} _
-Option = { "{" $name(Name) "?" ":" $content(ContentList)"}" #Option} _
-Constant = { "{" $name(Name) "=" ":" $content(ContentList)"}" #Constant} _
-Enumeration = { "{" $name(Name) "/" "/" $name(Name)">" ":" $content(ContentList)"}" #Enumeration} _
-Table = { "{" $name(Name) "#" ":" $content(ContentList) "}" #Table} _
-      / { "{" $name(Name) "#" "h" ":" $content(ContentList) "}" #Table} _
-Assertion ={ "{" $name(Name) "!" ":" $content(ContentList) "}" #Assertion} _
+Alternative = { "{" $name(Name) "/" $name(Name) ":" $content(ContentList)"}" #Alternative}
+Repetition = { "{" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition}
+           / { "{" $name(Name) "/" $name(Name) "*" "[" "|" "]" ":" $content(ContentList)"}" #Repetition}
+Option = { "{" $name(Name) "?" ":" $content(ContentList)"}" #Option}
+Constant = { "{" $name(Name) "=" ":" $content(ContentList)"}" #Constant}
+Enumeration = { "{" $name(Name) "/" "/" $name(Name)">" ":" $content(ContentList)"}" #Enumeration}
+Table = { "{" $name(Name) "#" ":" $content(ContentList) "}" #Table}
+      / { "{" $name(Name) "#" "h" ":" $content(ContentList) "}" #Table}
+Assertion ={ "{" $name(Name) "!" ":" $content(ContentList) "}" #Assertion}
 Token = { TOKEN  #Delim}
 TOKEN = [ -"'\[\]]
 KEYWORD = TOKEN / [{}]
 _ = S*
 S = [ \t\n\r]
 W = [a-zA-Z0-9_$]
-":" = ':' _
-"{" = '{' _
-"}" = '}' _
-">" = '>' _
-"<" = '<' _
-"[" = '[' _
-"|" = '|' _
-"]" = ']' _
-"=" = '=' _
-"#" = '#' _
-"h" = 'h' _
-"*" = '*' _
-"!" = '!' _
-"/" = '/' _
-"?" = '?' _
-";" = ';' _
+":" = ':'
+"{" = '{'
+"}" = '}'
+">" = '>'
+"<" = '<'
+"[" = '['
+"|" = '|'
+"]" = ']'
+"=" = '='
+"#" = '#'
+"h" = 'h'
+"*" = '*'
+"!" = '!'
+"/" = '/'
+"?" = '?'
+";" = ';'
 
 
 example Nonterminal'''

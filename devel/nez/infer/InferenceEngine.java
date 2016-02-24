@@ -7,7 +7,9 @@ import java.util.List;
 import nez.ParserGenerator;
 import nez.ast.Source;
 import nez.ast.Tree;
+import nez.lang.Expression;
 import nez.lang.Grammar;
+import nez.parser.Parser;
 import nez.parser.ParserStrategy;
 import nez.parser.io.StringSource;
 
@@ -15,14 +17,30 @@ public class InferenceEngine {
 	private final double maxMass;
 	private final double minCoverage;
 	private final double clusterTolerance;
+	private Grammar basedGrammar;
+	private Parser parser;
+	public static String grammarFilePath = "mytest/inference_log.nez";
 
 	public InferenceEngine() {
 		this.maxMass = 0.01;
 		this.minCoverage = 0.9;
 		this.clusterTolerance = 0.01;
+		ParserStrategy strategy = ParserStrategy.newSafeStrategy();
+		ParserGenerator pg = new ParserGenerator();
+
+		try {
+			this.parser = pg.newParser(grammarFilePath, strategy);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	public Grammar infer(String context) throws IOException {
+	public InferenceEngine(Grammar basedGrammar) {
+		this();
+		this.basedGrammar = basedGrammar;
+	}
+
+	public Grammar infer(String context) {
 		Tree<?> tokenTree = tokenize(context);
 		StructureType schema = this.discoverStructure(tokenTree);
 		// Grammar infered = this.generateGrammar(schema);
@@ -32,11 +50,20 @@ public class InferenceEngine {
 		return infered;
 	}
 
-	public Tree<?> tokenize(String context) throws IOException {
-		ParserStrategy strategy = ParserStrategy.newSafeStrategy();
-		ParserGenerator pg = new ParserGenerator();
+	public Expression infer(String context, Grammar base) {
+		Tree<?> tokenTree = tokenize(context);
+		StructureType schema = this.discoverStructure(tokenTree);
+		Expression infered = this.generateExpression(schema, base);
+		return infered;
+	}
+
+	private Expression generateExpression(StructureType schema, Grammar base) {
+		return schema.getExpression(base);
+	}
+
+	public Tree<?> tokenize(String context) {
 		Source ss = new StringSource(context);
-		return pg.newParser("inference_log.nez", strategy).parse(ss);
+		return parser.parse(ss);
 	}
 
 	private final StructureType discoverStructure(Tree<?> tokenTree) {
@@ -129,6 +156,11 @@ public class InferenceEngine {
 	// inferedStructure.getExpression(inferedGrammar));
 	// return inferedGrammar;
 	// }
+
+	private Expression generateExpression(StructureType inferedStructure) {
+		Expression expr = null;
+		return expr;
+	}
 
 	// public static void main(String[] args) {
 	// InferenceEngine eng = new InferenceEngine();

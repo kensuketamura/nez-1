@@ -11,7 +11,7 @@ import nez.parser.ParserStrategy;
 
 public class AnneGrammarGenerator {
 	private final static ParserStrategy strategy = ParserStrategy.newSafeStrategy();
-	private final static String anneGrammarFilePath = "anne.nez";
+	private final static String anneGrammarFilePath = "mytest/anne.nez";
 	private Parser anneParser;
 	public Grammar grammar;
 
@@ -35,14 +35,25 @@ public class AnneGrammarGenerator {
 		return null;
 	}
 
-	public Grammar generate(Source sc, String predefGrammarFilePath) {
+	public Grammar generate(Source sc, Source data, String predefGrammarFilePath) {
 		try {
 			Tree<?> node = anneParser.parse(sc);
+			if (node == null) {
+				throw new Exception();
+			}
 			loadPredefineGrammar(predefGrammarFilePath);
 			AnneExpressionConstructor constructor = new AnneExpressionConstructor(grammar, strategy);
 			constructor.load(node);
-			constructor.getGrammar().dump();
+			// constructor.getGrammar().dump();
+			node = (new Parser(getGrammar(), ParserStrategy.newSafeStrategy())).parse(data);
+			AnneTokenInferenceEngine tokenEngine = new AnneTokenInferenceEngine();
+			tokenEngine.infer(getGrammar(), node);
+			// getGrammar().dump();
+			node = (new Parser(getGrammar(), ParserStrategy.newSafeStrategy())).parse(data);
+			System.out.println(node);
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;

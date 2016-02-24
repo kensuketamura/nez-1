@@ -13,7 +13,7 @@ Token	= MetaToken
 
 SimpleTokenSequence	= {  ( $(SimpleToken) / $(Delim)  )+ #Sequence}
 
-Delim	= { DELIM* #Delim}
+Delim	= { DELIM #Delim}
 
 DELIM	= [ ,:;\-|_]
 
@@ -28,11 +28,12 @@ CloseParenthesis	= { CLOSE #CloseParen}
 PrimaryTypedToken	= Number
 					/ String
 //Number	= { '-'? INT (FRAC EXP? #Float / '' #Integer) }
-Number	= { '-'? '+'? DIGIT+ (FRAC EXP? #Float / '' #Integer) }
-String	= { ( !OPEN !CLOSE !DELIM ![\r\n ] . )+ #String}
+//Number	= { '-'? '+'? DIGIT+ (FRAC EXP? #Float / '' #Integer) }
+Number	= { ('-' / '+')? DIGIT+ #Number }
+String	= { ( !OPEN !CLOSE !DELIM ![\r\n ] !Number . )+ #String}
 
 BuiltInTypedToken	= IPAddress
-					/ EmailAddress
+					/ Email
 //					/ URLs
 					/ Path
 					/ Date
@@ -42,12 +43,12 @@ IPAddress			= IPv6
 					/ IPv4
 IPv6				= { ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 ':' ADDV6 #IPv6 }
 IPv4				= { ADDV4 '.' ADDV4 '.' ADDV4 '.' ADDV4 #IPv4}
-EmailAddress		= { EMAIL #Email }
+Email		= { EMAIL #Email }
 //URLs				= { SCHEMA ':' HIERALCHY ('?' QUERY)? ('#' QUERY)? }
 Path				= { PATH #Path}
 Date	= { DOW? S MONTH S DAY #Date}
         / { DAY '/' MONTH '/' YEAR #Date}
-Time	= { DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT #Time}
+Time	= { DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ' ' '-' DIGIT DIGIT #Time}
 
 
 //For MetaToken
@@ -86,6 +87,8 @@ NEWLINE	= '\r\n'
 		/ '\n'
 S		= [ \t]
 
+IP = IPAddress
+
 example File '''
 Sat Jun 24 06:38:46 2006
 
@@ -113,4 +116,3 @@ example File '''
 '''
 
 example MetaToken (123)
-

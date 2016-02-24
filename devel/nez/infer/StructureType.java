@@ -97,7 +97,13 @@ class Sequence extends StructureType {
 				l[index] = element.getExpression(g);
 			}
 		}
-		return Expressions.newSequence(l);
+		UList<Expression> exprl = new UList<>(new Expression[l.length]);
+		for (Expression expr : l) {
+			if (expr != null) {
+				exprl.add(expr);
+			}
+		}
+		return Expressions.newSequence(exprl);
 	}
 }
 
@@ -124,11 +130,15 @@ class Choice extends StructureType {
 		UList<Expression> l = new UList<Expression>(new Expression[this.maxTokenCount]);
 
 		for (Token element : tokenList) {
-			for (int index : element.getHistogram().getOrderIdList()) {
-				l.add(index, element.getExpression(g));
+			l.add(element.getExpression(g));
+		}
+		UList<Expression> exprl = new UList<Expression>(new Expression[l.size()]);
+		for (Expression expr : l) {
+			if (expr != null) {
+				exprl.add(expr);
 			}
 		}
-		return Expressions.newChoice(l);
+		return Expressions.newChoice(exprl);
 	}
 }
 

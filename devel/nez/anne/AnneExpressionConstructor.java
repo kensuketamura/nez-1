@@ -1,5 +1,6 @@
 package nez.anne;
 
+import nez.ast.Symbol;
 import nez.ast.Tree;
 import nez.lang.Expression;
 import nez.lang.Expressions;
@@ -14,19 +15,34 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 
 	private static final String unnamedProductionName = "_unnamedProduction";
 	private int uniqueId = 0;
+	private AnneChunker chunker;
 
 	public AnneExpressionConstructor(Grammar grammar, ParserStrategy strategy) {
 		super(grammar, strategy);
 		init(AnneExpressionConstructor.class, new TreeVisitor());
+		this.chunker = new AnneChunker(getGrammar());
+		chunker.appendChunkingGrammar(getGrammar());
 	}
 
 	public void load(Tree<?> node) {
+		UList<Expression> topProductions = new UList<>(new Expression[node.size()]);
 		for (int i = 0; i < node.size(); i++) {
 			Tree<?> prev = (i > 0) ? node.get(i - 1) : null;
 			Tree<?> sub = node.get(i);
 			Tree<?> next = (i < node.size() - 1) ? node.get(i + 1) : null;
 			this.find(key(node.get(i))).accept(prev, sub, next);
+			if (sub.has(_name)) {
+				Expression prod = Expressions.newNonTerminal(getGrammar(), sub.getText(_name, null));
+				prod = Expressions.newLinkTree(prod);
+				topProductions.add(prod);
+			}
 		}
+		Expression top = Expressions.newChoice(topProductions);
+		top = Expressions.newSequence(top, Expressions.newOption(Expressions.newNonTerminal(getGrammar(), "NEWLINE")));
+		top = Expressions.newZeroMore(top);
+		top = newNode("Top", top);
+		getGrammar().addProduction("_TOP", top);
+		getGrammar().setStartProduction("_TOP");
 	}
 
 	public Expression newInstance(Tree<?> prev, Tree<?> node, Tree<?> next) {
@@ -36,6 +52,10 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 	@Override
 	public Expression newInstance(Tree<?> node) {
 		return this.find(key(node)).accept(null, node, null);
+	}
+
+	private Expression newNode(String tag, Expression inner) {
+		return Expressions.newSequence(Expressions.newBeginTree(), inner, Expressions.newTag(Symbol.unique(tag)), Expressions.newEndTree());
 	}
 
 	public UList<Expression> visit(Tree<?> node) {
@@ -64,6 +84,7 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 
 			UList<Expression> seqList = visit(node.get(_content));
 			Expression inner = Expressions.newSequence(seqList);
+			inner = newNode(localName, inner);
 
 			Production target = getGrammar().getProduction(localName);
 			if (target != null) {
@@ -71,14 +92,14 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 			}
 
 			getGrammar().addProduction(localName, inner);
-			return Expressions.newNonTerminal(node, getGrammar(), localName);
+			return Expressions.newLinkTree(Expressions.newNonTerminal(node, getGrammar(), localName));
 		}
 	}
 
 	public class _Preamble extends TreeVisitor {
 		@Override
 		public Expression accept(Tree<?> prev, Tree<?> node, Tree<?> next) {
-			return Expressions.newNonTerminal(node, getGrammar(), node.getText(_name, null));
+			return Expressions.newLinkTree(Expressions.newNonTerminal(node, getGrammar(), node.getText(_name, null)));
 		}
 	}
 
@@ -90,10 +111,12 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 			// generate an expression such as (!(next delim) .)*
 			UList<Expression> repeatedExprList = new UList<>(new Expression[2]);
 			assert (next.is(_Delim));
-			repeatedExprList.add(Expressions.newNot(Expressions.newExpression(node, next.toText())));
+			repeatedExprList.add(Expressions.newNot(Expressions.newExpression(node, Character.toString(next.toText().charAt(0)))));
 			repeatedExprList.add(Expressions.newAny(node));
 			Expression repeatedExpr = Expressions.newSequence(repeatedExprList);
 			Expression inner = Expressions.newZeroMore(repeatedExpr);
+
+			inner = newNode(localName, inner);
 
 			Production target = getGrammar().getProduction(localName);
 			if (target != null) {
@@ -101,7 +124,7 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 			}
 
 			getGrammar().addProduction(localName, inner);
-			return Expressions.newNonTerminal(node, getGrammar(), localName);
+			return Expressions.newLinkTree(Expressions.newNonTerminal(node, getGrammar(), localName));
 		}
 	}
 
@@ -210,8 +233,9 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 		@Override
 		public Expression accept(Tree<?> prev, Tree<?> node, Tree<?> next) {
 			// InferenceEngine inferEngine = new InferenceEngine();
-			Expression expr = Expressions.newExpression(node, node.toText());
-			return expr;
+			// inferEngine.infer(node.toText());
+			Expression expr = chunker.chunk(node.toText());
+			return Expressions.newLinkTree(newNode("Token", expr));
 		}
 	}
 
@@ -219,7 +243,7 @@ public class AnneExpressionConstructor extends GrammarVisitorMap<AnneExpressionT
 		@Override
 		public Expression accept(Tree<?> prev, Tree<?> node, Tree<?> next) {
 			Expression expr = Expressions.newExpression(node, node.toText());
-			return expr;
+			return Expressions.newLinkTree(newNode("Delim", expr));
 		}
 	}
 

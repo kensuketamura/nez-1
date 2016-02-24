@@ -9,9 +9,13 @@ public class Command extends nez.main.Command {
 	public void exec() throws IOException {
 		checkInputSource();
 		AnneGrammarGenerator generator = new AnneGrammarGenerator();
-		while (hasInputSource()) {
-			Source input = nextInputSource();
-			generator.generate(input, grammarFile);
+		if (hasInputSource()) {
+			Source anne = nextInputSource();
+			Source data = null;
+			if (hasInputSource()) {
+				data = nextInputSource();
+			}
+			generator.generate(anne, data, grammarFile);
 		}
 	}
 }

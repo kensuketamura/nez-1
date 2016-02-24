@@ -99,6 +99,9 @@ public class TokenVisitor extends TreeVisitorMap<InferenceVisitor> {
 		}
 	}
 
+	public class _Number extends SimpleToken {
+	}
+
 	public class _Integer extends SimpleToken {
 	}
 
