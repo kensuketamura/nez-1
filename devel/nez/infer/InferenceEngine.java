@@ -19,7 +19,7 @@ public class InferenceEngine {
 	private final double clusterTolerance;
 	private Grammar basedGrammar;
 	private Parser parser;
-	public static String grammarFilePath = "mytest/inference_log.nez";
+	public static String grammarFilePath = "inference_log.nez";
 
 	public InferenceEngine() {
 		this.maxMass = 0.01;

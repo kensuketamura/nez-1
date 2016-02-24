@@ -13,9 +13,9 @@ Token	= MetaToken
 
 SimpleTokenSequence	= {  ( $(SimpleToken) / $(Delim)  )+ #Sequence}
 
-Delim	= { DELIM #Delim}
+Delim	= { DELIM+ #Delim}
 
-DELIM	= [ ,:;\-|_]
+DELIM	= [ ,:;\-|_\[\]"']
 
 SimpleToken	= BuiltInTypedToken
 			/ PrimaryTypedToken
@@ -48,7 +48,7 @@ Email		= { EMAIL #Email }
 Path				= { PATH #Path}
 Date	= { DOW? S MONTH S DAY #Date}
         / { DAY '/' MONTH '/' YEAR #Date}
-Time	= { DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ' ' '-' DIGIT DIGIT #Time}
+Time	= { DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ' ' '-' DIGIT DIGIT DIGIT DIGIT #Time}
 
 
 //For MetaToken
@@ -116,3 +116,7 @@ example File '''
 '''
 
 example MetaToken (123)
+
+example File '''
+ - - 207.136.3:3 [
+'''

@@ -16,7 +16,7 @@ import nez.util.UList;
 public class AnneChunker {
 	private Parser parser;
 	private Grammar basedGrammar;
-	public static String grammarFilePath = "mytest/inference_log.nez";
+	public static String grammarFilePath = "inference_log.nez";
 
 	private static Symbol _List = Symbol.unique("List");
 	private static Symbol _Chunk = Symbol.unique("Chunk");

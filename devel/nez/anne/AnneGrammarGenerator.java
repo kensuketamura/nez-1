@@ -11,7 +11,7 @@ import nez.parser.ParserStrategy;
 
 public class AnneGrammarGenerator {
 	private final static ParserStrategy strategy = ParserStrategy.newSafeStrategy();
-	private final static String anneGrammarFilePath = "mytest/anne.nez";
+	private final static String anneGrammarFilePath = "anne.nez";
 	private Parser anneParser;
 	public Grammar grammar;
 
